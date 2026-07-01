@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#161e17">
+<meta name="description" content="Fast shorthand note capture with auto-sorting categories and folders">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jigsaw Notes">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<title>Jigsaw Notes</title>
+<style>
+  :root {
+    --bg: #161e17;
+    --fg: #d4ddd7;
+    --panel: #111911;
+    --border: #3d5242;
+    --accent: #4cd36f;
+    --bg-effect: #e8c39e;
+    
+    --text: var(--fg);
+    --dim: #8a998e;
+    --danger: #ff6b6b;
+    --card: var(--bg);
+    --card2: var(--panel);
+  }
+  
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+  }
+  
+  header {
+    padding: 16px 16px 12px;
+    background: var(--bg);
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #menuBtn {
+    background: none; border: none; color: var(--text);
+    font-size: 22px; cursor: pointer; padding: 4px; line-height: 1;
+  }
+  h1 { font-size: 18px; margin: 0; font-weight: 700; flex: 1; }
+  
+  .view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 80px; }
+  .view.hidden { display: none !important; }
+
+  .input-row {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    margin: 0; padding: 6px 6px 6px 14px;
+    border-radius: 18px; border: 1px solid var(--border); background: var(--panel);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: border-color 0.2s;
+  }
+  .input-row:focus-within { border-color: var(--accent); }
+  #rapidEntry {
+    flex: 1; font-size: 16px; padding: 10px 0;
+    border: none; background: transparent; color: var(--text); outline: none;
+  }
+  #rapidAddBtn {
+    font-size: 15px; font-weight: 600; padding: 10px 16px; border-radius: 14px;
+    border: none; background: var(--accent); color: var(--panel); cursor: pointer; flex-shrink: 0;
+  }
+
+  .editor-meta {
+    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border); background: var(--panel);
+  }
+  .tag-badge, .folder-badge {
+    padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;
+    cursor: pointer; border: 1px solid var(--border);
+  }
+  .folder-badge { background: var(--bg); color: var(--dim); }
+  .tag-badge { text-transform: uppercase; letter-spacing: 0.5px; background: rgba(76, 211, 111, 0.1); color: var(--accent); }
+
+  #noteContent {
+    flex: 1; width: 100%; resize: none; background: var(--bg); color: var(--text);
+    border: none; padding: 20px 16px; font-size: 16px; line-height: 1.6;
+    outline: none; font-family: inherit;
+  }
+
+  #view-rapid { padding: 0; overflow: hidden; }
+  .rapid-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 160px; }
+  section.list { margin-top: 20px; border-radius: 12px; min-height: 50px; transition: background 0.2s;}
+  section.list.drag-over { background: rgba(255,255,255,0.05); }
+  
+  .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .list-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  
+  .entries { display: flex; flex-direction: column; gap: 8px; }
+  .entry {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; font-size: 15px;
+    line-height: 1.4; display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 10px; cursor: grab;
+  }
+  .entry:active { cursor: grabbing; }
+  .entry-content { flex: 1; overflow: hidden; pointer-events: none; }
+  .entry-title { font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry-preview { font-size: 13px; color: var(--dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .entry .del { color: var(--dim); font-size: 18px; padding: 0 4px; line-height: 1; cursor: pointer; z-index: 2; }
+  .entry .del:active { color: var(--danger); }
+  .empty { color: var(--dim); font-size: 13px; padding: 10px 2px; }
+
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 99; opacity: 0;
+    pointer-events: none; transition: opacity 0.3s;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .sidebar {
+    position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
+    background: var(--panel); border-right: 1px solid var(--border);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100;
+    display: flex; flex-direction: column;
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-header { padding: 20px 16px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .sidebar-header h2 { margin: 0; font-size: 16px; }
+  .close-sidebar { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
+  
+  .sidebar-actions { padding: 16px; border-bottom: 1px solid var(--border); display:flex; gap:8px;}
+  .btn-sidebar { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
+  
+  .recent-folders-box { padding: 16px 16px 4px; border-bottom: 1px solid var(--border); }
+  .recent-folders-box h3 { margin: 0 0 10px; font-size: 11px; color: var(--dim); text-transform: uppercase; }
+  .recent-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .recent-chip {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-size: 12px; padding: 6px 12px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+  }
+  .recent-chip.active { background: var(--accent); color: var(--panel); border-color: var(--accent); font-weight: 600; }
+
+  .recent-note-item {
+    font-size: 13px; color: var(--text); padding: 8px 10px; border-radius: 6px;
+    background: var(--bg); border: 1px solid var(--border); cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+  }
+  .recent-note-item:active { border-color: var(--accent); }
+
+  .pinned-notes-box { padding: 16px 16px 4px; border-bottom: 1px solid var(--border); background: rgba(76, 211, 111, 0.05); }
+  .pinned-notes-box h3 { margin: 0 0 10px; font-size: 11px; color: var(--accent); text-transform: uppercase; }
+  .pinned-note-item {
+    font-size: 13px; color: var(--text); padding: 8px 10px; border-radius: 6px;
+    background: var(--bg); border: 1px solid var(--border); cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
+    border-left: 3px solid var(--accent);
+  }
+  .pinned-note-item:active { border-color: var(--accent); }
+
+  .folder-tree-container { flex: 1; overflow-y: auto; padding: 12px 8px; }
+  .folder-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; margin: 2px 0; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--dim); border: 1px solid transparent;
+  }
+  .folder-item.active { background: var(--bg); color: var(--accent); border-color: var(--border); font-weight: 600; }
+  .folder-indent-0 { margin-left: 0; }
+  .folder-indent-1 { margin-left: 16px; border-left: 2px solid var(--border); }
+  .folder-indent-2 { margin-left: 32px; border-left: 2px solid var(--border); }
+  .f-del { display:none; color: var(--dim); font-size: 14px; }
+  .folder-item:hover .f-del { display: block; }
+  
+  .add-folder-box { padding: 16px; border-top: 1px solid var(--border); background: var(--panel); }
+  .add-folder-box input, .add-folder-box select, .add-folder-box button {
+    width: 100%; font-size: 13px; padding: 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 8px; outline:none;
+  }
+  .add-folder-box button { background: var(--accent); color: var(--panel); font-weight: 600; border: none; cursor: pointer; }
+
+  /* ── Bottom Dock ── */
+  #bottom-dock {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg); border-top: 1px solid var(--border);
+    padding: 10px 16px max(14px, env(safe-area-inset-bottom));
+    z-index: 90; transition: bottom 0.1s ease-out;
+  }
+  .dock-controls {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  #bottom-dock.editor-mode .dock-controls { margin-bottom: 0; }
+  #bottom-dock.editor-mode .input-row { display: none; }
+  .view-toggle-inner {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 24px;
+    display: flex; padding: 4px; gap: 4px;
+  }
+  .dock-dict-btn {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+    cursor: pointer; transition: transform 0.2s; flex-shrink: 0;
+  }
+  .dock-dict-btn:active { transform: scale(0.9); }
+
+  .modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    width: 90%; max-width: 400px; padding: 20px; z-index: 102;
+    opacity: 0; pointer-events: none; transition: all 0.2s; display: flex; flex-direction: column; max-height: 80vh;
+  }
+  .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-header h2 { margin: 0; font-size: 16px; }
+  .modal-body { overflow-y: auto; flex:1; }
+  
+  .modal-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .modal-row input { flex: 1; font-size: 13px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); min-width: 0; outline:none;}
+  .modal-row button { font-size: 13px; padding: 0 16px; border-radius: 8px; border: none; background: var(--accent); color: var(--panel); font-weight: 600; cursor: pointer; }
+  
+  .list-item {
+    display: flex; justify-content: space-between; align-items: center; font-size: 13px;
+    color: var(--dim); padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 6px;
+  }
+  .list-item:hover { background: var(--bg); }
+  .list-item span b { color: var(--text); }
+  .list-item .del { color: var(--dim); padding: 0 6px; font-size: 16px; }
+
+  .view-toggle-btn {
+    padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;
+    color: var(--dim); background: transparent; border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .view-toggle-btn.active { background: var(--bg); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+  .pin-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--dim);
+    padding: 6px 10px; font-size: 14px; cursor: pointer; transition: all 0.2s;
+    margin-left: auto; /* Push to the right of the meta bar */
+  }
+  .pin-btn.is-pinned {
+    background: rgba(76, 211, 111, 0.15); color: var(--accent); border-color: var(--accent);
+  }
+
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: var(--panel); border: 1px solid var(--accent); color: var(--text);
+    padding: 10px 18px; border-radius: 20px; font-size: 13px;
+    opacity: 0; transition: all 0.25s ease; pointer-events: none; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="mainOverlay"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>Menu</h2>
+    <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+  </div>
+  
+  <div class="sidebar-actions">
+    <button class="btn-sidebar" id="menuCatsBtn">⚙️ Categories</button>
+  </div>
+
+  <div class="pinned-notes-box" id="pinnedNotesBox" style="display: none;">
+    <h3>📌 Pinned</h3>
+    <div id="pinnedNotesList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+  </div>
+
+  <div class="recent-folders-box" id="recentNotesBox" style="display: none;">
+    <h3>Recent Notes</h3>
+    <div id="recentNotesList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+  </div>
+
+  <div class="recent-folders-box" id="recentFoldersBox" style="display: none;">
+    <h3>Recent Folders</h3>
+    <div class="recent-chips" id="recentChips"></div>
+  </div>
+
+  <div class="folder-tree-container" id="folderTree"></div>
+  
+  <div class="add-folder-box">
+    <input type="text" id="newFolderInput" placeholder="New folder name..." autocomplete="off">
+    <select id="newFolderParent"></select>
+    <button id="addFolderBtn">Add Folder</button>
+  </div>
+</div>
+
+<div class="modal" id="dictModal">
+  <div class="modal-header">
+    <h2>📖 Dictionary</h2>
+    <button class="close-sidebar" id="closeDictBtn">✕</button>
+  </div>
+  <div class="modal-row">
+    <input id="dictKey" type="text" placeholder="key (mtg)" autocomplete="off" autocapitalize="off">
+    <input id="dictVal" type="text" placeholder="text (meeting)" autocomplete="off" autocapitalize="off">
+    <button id="dictAdd">Save</button>
+  </div>
+  <div class="modal-body" id="dictList" style="display: flex; flex-direction: column; gap:4px;"></div>
+</div>
+
+<div class="modal" id="catModal">
+  <div class="modal-header">
+    <h2>⚙️ Categories</h2>
+    <button class="close-sidebar" id="closeCatBtn">✕</button>
+  </div>
+  <div class="modal-row">
+    <input id="catName" type="text" placeholder="Name (e.g. Ideas)" autocomplete="off">
+    <input id="catPrefix" type="text" placeholder="Prefix (e.g. *)" autocomplete="off" style="max-width: 80px;">
+    <button id="catAdd">Save</button>
+  </div>
+  <div class="modal-body" id="catList" style="display: flex; flex-direction: column; gap:4px;"></div>
+</div>
+
+<div class="modal" id="selectCatModal">
+  <div class="modal-header">
+    <h2>Move to Category</h2>
+    <button class="close-sidebar" id="closeSelectCatBtn">✕</button>
+  </div>
+  <div class="modal-body" id="selectCatList" style="display: flex; flex-direction: column; gap:4px;"></div>
+</div>
+
+<div class="modal" id="selectFolderModal">
+  <div class="modal-header">
+    <h2>Move to Folder</h2>
+    <button class="close-sidebar" id="closeSelectFolderBtn">✕</button>
+  </div>
+  <div class="modal-body" id="selectFolderList" style="display: flex; flex-direction: column; gap:4px;"></div>
+</div>
+
+<header>
+  <div class="header-top">
+    <button id="menuBtn">☰</button>
+    <h1 id="appTitle">Jigsaw Notes</h1>
+  </div>
+</header>
+
+<div class="view hidden" id="view-editor">
+  <div class="editor-meta">
+    <span class="folder-badge" id="editorFolderBadge">Home</span>
+    <span class="tag-badge" id="editorTagBadge">Happening</span>
+    <button class="pin-btn" id="editorPinBtn" title="Pin Note">📌</button>
+  </div>
+  <textarea id="noteContent" placeholder="Type here..."></textarea>
+</div>
+
+<div class="view" id="view-rapid">
+  <div class="rapid-scroll">
+    <div id="dynamicListsContainer"></div>
+  </div>
+</div>
+
+<div id="bottom-dock">
+  <div class="dock-controls">
+    <div class="view-toggle-inner">
+      <button class="view-toggle-btn active" id="toggleRapidBtn">Rapid</button>
+      <button class="view-toggle-btn" id="toggleNoteBtn">Note</button>
+    </div>
+    <button class="dock-dict-btn" id="dictFab">📖</button>
+  </div>
+  <div class="input-row">
+    <input id="rapidEntry" type="text" placeholder="Prefix sorts automatically..." autocomplete="off" autocapitalize="off" />
+    <button id="rapidAddBtn">Log</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const DICT_KEY = "jigsaw_dict_v3";
+  const ENTRIES_KEY = "jigsaw_entries_v3";
+  const FOLDERS_KEY = "jigsaw_folders_v3";
+  const RECENT_KEY = "jigsaw_recent_v3";
+  const RECENT_NOTES_KEY = "jigsaw_recent_notes_v3";
+  const CATS_KEY = "jigsaw_cats_v3";
+  const PINNED_NOTES_KEY = "jigsaw_pinned_v3";
+
+  let folders = JSON.parse(localStorage.getItem(FOLDERS_KEY)) || [{ id: 'root', name: 'Home', parentId: null }];
+  let recentFolders = JSON.parse(localStorage.getItem(RECENT_KEY)) || ['root'];
+  let recentNotes = JSON.parse(localStorage.getItem(RECENT_NOTES_KEY)) || [];
+  let pinnedNotes = JSON.parse(localStorage.getItem(PINNED_NOTES_KEY)) || [];
+  let dict = JSON.parse(localStorage.getItem(DICT_KEY)) || { "mtg": "meeting", "tmrw": "tomorrow", "w/": "with" };
+  
+  let defaultCats = [
+      { id: 'cat_happening', name: 'Happening', prefix: '' },
+      { id: 'cat_todo', name: 'To Do', prefix: '!' },
+      { id: 'cat_question', name: 'Question', prefix: '?' }
+  ];
+  let categories = JSON.parse(localStorage.getItem(CATS_KEY)) || defaultCats;
+  
+  // Migrate entries to support category IDs instead of hardcoded strings
+  let entries = JSON.parse(localStorage.getItem(ENTRIES_KEY)) || [];
+  
+  let currentFolderId = 'root';
+  let currentNoteId = null; 
+  let currentView = 'rapid'; // 'rapid' | 'editor'
+
+  function saveAll() {
+    localStorage.setItem(DICT_KEY, JSON.stringify(dict));
+    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+    localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recentFolders));
+    localStorage.setItem(RECENT_NOTES_KEY, JSON.stringify(recentNotes));
+    localStorage.setItem(CATS_KEY, JSON.stringify(categories));
+    localStorage.setItem(PINNED_NOTES_KEY, JSON.stringify(pinnedNotes));
+  }
+
+  function getCat(id) { return categories.find(c => c.id === id) || categories[0]; }
+  function getFolderName(id) { const f = folders.find(f => f.id === id); return f ? f.name : "Home"; }
+
+  function classifyText(text) {
+    const trimmed = text.trim();
+    // Sort categories by prefix length descending to match longest specific prefix first
+    const sortedCats = [...categories].filter(c => c.prefix).sort((a,b) => b.prefix.length - a.prefix.length);
+    for (let cat of sortedCats) {
+        if (trimmed.startsWith(cat.prefix)) {
+            return { catId: cat.id, clean: trimmed.slice(cat.prefix.length).trim() || "Empty" };
+        }
+    }
+    // Fallback to first category (usually 'Happening' with empty prefix)
+    return { catId: categories[0].id, clean: trimmed || "Empty" };
+  }
+
+  function expandShorthand(text) {
+    const keys = Object.keys(dict).sort((a, b) => b.length - a.length);
+    let words = text.split(/(\s+)/); 
+    words = words.map(tok => {
+      const match = keys.find(k => k.toLowerCase() === tok.trim().toLowerCase());
+      return match ? dict[match] : tok;
+    });
+    return words.join("");
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function startOrOpenEmptyNote() {
+    // Find an empty note in current folder
+    let emptyNote = entries.find(e => e.folderId === currentFolderId && e.content.trim() === '');
+    
+    if (emptyNote) {
+        currentNoteId = emptyNote.id;
+        document.getElementById("noteContent").value = emptyNote.content;
+    } else {
+        currentNoteId = "n_" + Date.now().toString(36);
+        let newEntry = {
+            id: currentNoteId,
+            folderId: currentFolderId,
+            catId: categories[0].id,
+            ts: Date.now(),
+            title: "",
+            content: ""
+        };
+        entries.unshift(newEntry);
+        document.getElementById("noteContent").value = "";
+    }
+    updateRecentNotes(currentNoteId);
+    updateEditorUI();
+    setTimeout(() => document.getElementById("noteContent").focus(), 100);
+  }
+
+  function openNote(id) {
+    const note = entries.find(e => e.id === id);
+    if (!note) return;
+    currentNoteId = id;
+    currentFolderId = note.folderId;
+    document.getElementById("noteContent").value = note.content;
+    updateRecentNotes(currentNoteId);
+    updateEditorUI();
+    switchView('editor');
+  }
+
+  function updateRecentNotes(id) {
+    recentNotes = recentNotes.filter(nId => nId !== id);
+    recentNotes.unshift(id);
+    if (recentNotes.length > 5) recentNotes.pop();
+    saveAll();
+  }
+
+  function autoSaveNote() {
+    if (!currentNoteId) return;
+    const content = document.getElementById("noteContent").value;
+    const note = entries.find(e => e.id === currentNoteId);
+    if (note) {
+        // If content is completely new (was empty), try to classify it ONCE based on prefix
+        if (note.content.trim() === '' && content.trim() !== '') {
+            const firstLine = content.split('\n')[0];
+            const { catId } = classifyText(firstLine);
+            note.catId = catId;
+        }
+        
+        note.content = content;
+        note.title = content.split('\n')[0].trim() || "";
+        note.ts = Date.now();
+        saveAll();
+        updateEditorUI();
+    }
+  }
+
+  function updateEditorUI() {
+    if (!currentNoteId) return;
+    const note = entries.find(e => e.id === currentNoteId);
+    if(!note) return;
+
+    document.getElementById("editorFolderBadge").textContent = getFolderName(note.folderId);
+    const cat = getCat(note.catId);
+    const tag = document.getElementById("editorTagBadge");
+    tag.textContent = cat.name;
+
+    const pinBtn = document.getElementById("editorPinBtn");
+    if (pinnedNotes.includes(currentNoteId)) {
+        pinBtn.classList.add("is-pinned");
+    } else {
+        pinBtn.classList.remove("is-pinned");
+    }
+  }
+
+  // Rapid logging logic
+  function addRapidEntry() {
+    const input = document.getElementById("rapidEntry");
+    const raw = input.value;
+    if (!raw.trim()) return;
+
+    const { catId, clean } = classifyText(raw);
+    const expanded = expandShorthand(clean);
+
+    entries.unshift({
+        id: "n_" + Date.now().toString(36),
+        folderId: currentFolderId,
+        catId: catId,
+        ts: Date.now(),
+        title: expanded.split('\n')[0],
+        content: expanded
+    });
+    saveAll();
+    input.value = "";
+    renderRapidView();
+    showToast(`Added to ${getCat(catId).name}`);
+    input.focus();
+  }
+
+  function switchView(viewName) {
+    currentView = viewName;
+    document.getElementById('view-editor').classList.toggle('hidden', viewName !== 'editor');
+    document.getElementById('view-rapid').classList.toggle('hidden', viewName !== 'rapid');
+    document.getElementById('bottom-dock').classList.toggle('editor-mode', viewName === 'editor');
+    
+    document.getElementById('toggleNoteBtn').classList.toggle('active', viewName === 'editor');
+    document.getElementById('toggleRapidBtn').classList.toggle('active', viewName === 'rapid');
+
+    if (viewName === 'rapid') {
+        document.getElementById('appTitle').textContent = getFolderName(currentFolderId);
+        renderRapidView();
+    } else {
+        document.getElementById('appTitle').textContent = "Jigsaw Notes";
+        if(!currentNoteId) startOrOpenEmptyNote();
+    }
+  }
+
+  function renderRapidView() {
+    const container = document.getElementById("dynamicListsContainer");
+    container.innerHTML = "";
+
+    categories.forEach(cat => {
+      const items = entries.filter(e => e.catId === cat.id && e.folderId === currentFolderId && e.content.trim() !== '');
+      
+      const sec = document.createElement("section");
+      sec.className = "list";
+      sec.dataset.catId = cat.id; // For drop target
+      
+      // Drag and drop event listeners
+      sec.addEventListener('dragover', e => { e.preventDefault(); sec.classList.add('drag-over'); });
+      sec.addEventListener('dragleave', e => { sec.classList.remove('drag-over'); });
+      sec.addEventListener('drop', e => {
+          e.preventDefault();
+          sec.classList.remove('drag-over');
+          const entryId = e.dataTransfer.getData('text/plain');
+          const entry = entries.find(en => en.id === entryId);
+          if (entry && entry.catId !== cat.id) {
+              entry.catId = cat.id;
+              saveAll();
+              renderRapidView();
+          }
+      });
+
+      const header = document.createElement("div");
+      header.className = "list-header";
+      header.innerHTML = `<div class="list-title"><span class="dot"></span>${cat.name} ${cat.prefix ? `(${cat.prefix})` : ''}</div>`;
+      sec.appendChild(header);
+
+      const entriesDiv = document.createElement("div");
+      entriesDiv.className = "entries";
+      
+      if (items.length === 0) {
+        entriesDiv.innerHTML = `<div class="empty">Nothing here.</div>`;
+      } else {
+        items.forEach(e => {
+            const div = document.createElement("div");
+            div.className = "entry";
+            div.draggable = true;
+            
+            div.addEventListener('dragstart', ev => {
+                ev.dataTransfer.setData('text/plain', e.id);
+            });
+
+            let preview = e.content.split('\n').slice(1).join(' ').trim();
+            div.innerHTML = `
+                <div class="entry-content">
+                    <div class="entry-title">${e.title || "Untitled"}</div>
+                    ${preview ? `<div class="entry-preview">${preview}</div>` : ''}
+                </div>
+                <div class="del">✕</div>
+            `;
+            
+            div.addEventListener("click", () => openNote(e.id));
+            div.querySelector(".del").addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              if(confirm("Delete entry?")) { entries = entries.filter(en => en.id !== e.id); saveAll(); renderRapidView(); }
+            });
+            entriesDiv.appendChild(div);
+    });
+  }
+  sec.appendChild(entriesDiv);
+  container.appendChild(sec);
+});
+}
+
+function renderSidebarPinnedNotes() {
+    const pinnedBox = document.getElementById("pinnedNotesBox");
+    const list = document.getElementById("pinnedNotesList");
+    list.innerHTML = "";
+
+    const validNotes = pinnedNotes.filter(nId => entries.some(e => e.id === nId));
+    if (validNotes.length > 0) {
+        pinnedBox.style.display = "block";
+        validNotes.forEach(nId => {
+            const note = entries.find(e => e.id === nId);
+            const title = note.title || "Untitled Note";
+            const div = document.createElement("div");
+            div.className = "pinned-note-item";
+            div.textContent = title;
+            div.onclick = () => {
+                openNote(nId);
+                toggleModal('sidebar', false);
+            };
+            list.appendChild(div);
+        });
+    } else {
+        pinnedBox.style.display = "none";
+    }
+}
+
+function renderSidebarRecentNotes() {
+const recentBox = document.getElementById("recentNotesBox");
+const list = document.getElementById("recentNotesList");
+list.innerHTML = "";
+
+const validNotes = recentNotes.filter(nId => entries.some(e => e.id === nId));
+if (validNotes.length > 0) {
+    recentBox.style.display = "block";
+    validNotes.forEach(nId => {
+        const note = entries.find(e => e.id === nId);
+        const title = note.title || "Untitled Note";
+        const div = document.createElement("div");
+        div.className = "recent-note-item";
+        div.textContent = title;
+        div.onclick = () => {
+            openNote(nId);
+            toggleModal('sidebar', false);
+        };
+        list.appendChild(div);
+    });
+} else {
+    recentBox.style.display = "none";
+}
+}
+
+function renderSidebarFolders() {
+renderSidebarPinnedNotes();
+renderSidebarRecentNotes();
+const tree = document.getElementById("folderTree");
+const parentSelect = document.getElementById("newFolderParent");
+tree.innerHTML = ""; parentSelect.innerHTML = "";
+
+const recentBox = document.getElementById("recentFoldersBox");
+const recentContainer = document.getElementById("recentChips");
+recentContainer.innerHTML = "";
+
+const validRecents = recentFolders.filter(rId => folders.some(f => f.id === rId));
+if (validRecents.length > 0) { 
+  recentBox.style.display = "block";
+  validRecents.forEach(rId => {
+    const chip = document.createElement("div");
+    chip.className = `recent-chip ${rId === currentFolderId && currentView === 'rapid' ? 'active' : ''}`;
+    chip.innerHTML = `${rId === 'root' ? '🏠' : '📂'} ${getFolderName(rId)}`;
+    chip.onclick = () => { currentFolderId = rId; updateRecents(rId); toggleModal('sidebar', false); switchView('rapid'); };
+    recentContainer.appendChild(chip);
+  });
+} else { recentBox.style.display = "none"; }
+
+function drawFolder(folder, depth) {
+        const div = document.createElement("div");
+        const isActive = folder.id === currentFolderId && currentView === 'rapid';
+        div.className = `folder-item folder-indent-${depth} ${isActive ? 'active' : ''}`;
+        let icon = depth === 0 ? '🏠' : (depth === 1 ? '📂' : '📄');
+        
+        div.innerHTML = `<span>${icon} ${folder.name}</span> <span class="f-del" title="Delete">✕</span>`;
+        div.onclick = (e) => {
+            if (e.target.classList.contains('f-del')) {
+                if(!confirm("Delete folder? Notes move to Home.")) return;
+                let toDel = [folder.id];
+                // basic recursive delete skipped for brevity, single level handled
+                entries.forEach(en => { if(en.folderId === folder.id) en.folderId = 'root'; });
+                folders = folders.filter(f => f.id !== folder.id);
+                saveAll(); renderSidebarFolders();
+            } else {
+                currentFolderId = folder.id; updateRecents(folder.id);
+                toggleModal('sidebar', false); switchView('rapid');
+            }
+        };
+        tree.appendChild(div);
+        if (depth < 2) parentSelect.add(new Option("—".repeat(depth) + folder.name, folder.id));
+        folders.filter(f => f.parentId === folder.id).forEach(c => drawFolder(c, depth + 1));
+    }
+    const rootFolder = folders.find(f => f.id === 'root');
+    if (rootFolder) drawFolder(rootFolder, 0);
+  }
+
+  function updateRecents(id) {
+    recentFolders = recentFolders.filter(fId => fId !== id);
+    recentFolders.unshift(id);
+    if (recentFolders.length > 5) recentFolders.pop();
+    saveAll();
+  }
+
+  function renderDict() {
+    const list = document.getElementById("dictList"); list.innerHTML = "";
+    Object.keys(dict).sort().forEach(k => {
+      const row = document.createElement("div"); row.className = "list-item";
+      row.innerHTML = `<div style="flex:1;"><b>${k}</b> → ${dict[k]}</div><span class="del">✕</span>`;
+      row.onclick = (e) => {
+        if(e.target.classList.contains('del')) { delete dict[k]; saveAll(); renderDict(); return; }
+        document.getElementById("dictKey").value = k; document.getElementById("dictVal").value = dict[k];
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function renderCategories() {
+    const list = document.getElementById("catList"); list.innerHTML = "";
+    categories.forEach(c => {
+      const row = document.createElement("div"); row.className = "list-item";
+      row.innerHTML = `<div style="flex:1;"><b>${c.name}</b> ${c.prefix ? `(${c.prefix})` : ''}</div><span class="del">✕</span>`;
+      row.onclick = (e) => {
+        if(e.target.classList.contains('del')) { 
+            if(categories.length === 1) { showToast("Need at least 1 category"); return; }
+            categories = categories.filter(cat => cat.id !== c.id); 
+            entries.forEach(en => { if(en.catId === c.id) en.catId = categories[0].id; });
+            saveAll(); renderCategories(); return; 
+        }
+        document.getElementById("catName").value = c.name; document.getElementById("catPrefix").value = c.prefix;
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function renderSelectModals() {
+    // Select Category Modal
+    const catList = document.getElementById("selectCatList"); catList.innerHTML = "";
+    categories.forEach(c => {
+        const row = document.createElement("div"); row.className = "list-item";
+        row.innerHTML = `<b>${c.name}</b>`;
+        row.onclick = () => {
+            const note = entries.find(e => e.id === currentNoteId);
+            if(note) { note.catId = c.id; saveAll(); updateEditorUI(); }
+            toggleModal('selectCatModal', false);
+        };
+        catList.appendChild(row);
+    });
+
+    // Select Folder Modal
+    const fList = document.getElementById("selectFolderList"); fList.innerHTML = "";
+    folders.forEach(f => {
+        const row = document.createElement("div"); row.className = "list-item";
+        row.innerHTML = `<b>${f.name}</b>`;
+        row.onclick = () => {
+            const note = entries.find(e => e.id === currentNoteId);
+            if(note) { note.folderId = f.id; saveAll(); updateEditorUI(); }
+            toggleModal('selectFolderModal', false);
+        };
+        fList.appendChild(row);
+    });
+  }
+
+  function toggleModal(id, show) {
+      const el = document.getElementById(id);
+      const ov = document.getElementById("mainOverlay");
+      if(show) {
+          document.querySelectorAll('.sidebar, .modal').forEach(m => m.classList.remove('open'));
+          el.classList.add('open'); ov.classList.add('open');
+      } else {
+          el.classList.remove('open'); ov.classList.remove('open');
+      }
+  }
+
+  document.getElementById("mainOverlay").addEventListener("click", () => {
+      document.querySelectorAll('.sidebar, .modal').forEach(m => m.classList.remove('open'));
+      document.getElementById("mainOverlay").classList.remove('open');
+  });
+
+  document.getElementById("menuBtn").addEventListener("click", () => { renderSidebarFolders(); toggleModal('sidebar', true); });
+  document.getElementById("closeSidebarBtn").addEventListener("click", () => toggleModal('sidebar', false));
+  
+  document.getElementById("dictFab").addEventListener("click", () => { renderDict(); toggleModal('dictModal', true); });
+  document.getElementById("closeDictBtn").addEventListener("click", () => toggleModal('dictModal', false));
+
+  document.getElementById("menuCatsBtn").addEventListener("click", () => { renderCategories(); toggleModal('catModal', true); });
+  document.getElementById("closeCatBtn").addEventListener("click", () => toggleModal('catModal', false));
+
+  document.getElementById("closeSelectCatBtn").addEventListener("click", () => toggleModal('selectCatModal', false));
+  document.getElementById("closeSelectFolderBtn").addEventListener("click", () => toggleModal('selectFolderModal', false));
+
+  // Tag Clicks
+  document.getElementById("editorTagBadge").addEventListener("click", () => { renderSelectModals(); toggleModal('selectCatModal', true); });
+  document.getElementById("editorFolderBadge").addEventListener("click", () => { renderSelectModals(); toggleModal('selectFolderModal', true); });
+
+  // Toggles
+  document.getElementById("toggleRapidBtn").addEventListener("click", () => switchView('rapid'));
+  document.getElementById("toggleNoteBtn").addEventListener("click", () => switchView('editor'));
+
+  // Pin Button
+  document.getElementById("editorPinBtn").addEventListener("click", () => {
+      if (!currentNoteId) return;
+      if (pinnedNotes.includes(currentNoteId)) {
+          pinnedNotes = pinnedNotes.filter(id => id !== currentNoteId);
+          showToast("Note unpinned");
+      } else {
+          pinnedNotes.push(currentNoteId);
+          showToast("Note pinned");
+      }
+      saveAll();
+      updateEditorUI();
+  });
+
+  // Live shorthand expansion in Note mode (fires on Space, Enter, punctuation)
+  document.getElementById("noteContent").addEventListener('keydown', (e) => {
+    const triggers = [' ', 'Enter', ',', '.', ';', ':', '!', '?'];
+    if (!triggers.includes(e.key)) return;
+
+    const ta = e.target;
+    const val = ta.value;
+    const pos = ta.selectionStart;
+
+    // Find the start of the current word (scan left from cursor)
+    let wordStart = pos;
+    while (wordStart > 0 && val[wordStart - 1] !== ' ' && val[wordStart - 1] !== '\n') wordStart--;
+    const word = val.slice(wordStart, pos);
+    if (!word) return;
+
+    // Look up in dictionary (case-insensitive)
+    const keys = Object.keys(dict);
+    const matchKey = keys.find(k => k.toLowerCase() === word.toLowerCase());
+    if (!matchKey) return;
+
+    // Prevent default so the trigger character is inserted after replacement
+    e.preventDefault();
+    const expansion = dict[matchKey];
+    const insertChar = e.key === 'Enter' ? '\n' : e.key;
+    const newVal = val.slice(0, wordStart) + expansion + insertChar + val.slice(pos);
+    ta.value = newVal;
+    // Place cursor right after the inserted expansion + trigger
+    const newPos = wordStart + expansion.length + 1;
+    ta.setSelectionRange(newPos, newPos);
+    // Trigger autosave
+    autoSaveNote();
+  });
+
+  // Inputs
+  document.getElementById("noteContent").addEventListener('input', autoSaveNote);
+  document.getElementById("rapidAddBtn").addEventListener("click", addRapidEntry);
+  document.getElementById("rapidEntry").addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("rapidAddBtn").click(); });
+
+  // Add Folder/Cat/Dict
+  document.getElementById("addFolderBtn").addEventListener("click", () => {
+    const name = document.getElementById("newFolderInput").value.trim();
+    if (!name) return;
+    const newId = "f_" + Date.now().toString(36);
+    folders.push({ id: newId, name: name, parentId: document.getElementById("newFolderParent").value });
+    saveAll(); document.getElementById("newFolderInput").value = "";
+    renderSidebarFolders();
+  });
+
+  document.getElementById("dictAdd").addEventListener("click", () => {
+    const k = document.getElementById("dictKey").value.trim();
+    const v = document.getElementById("dictVal").value.trim();
+    if (k && v) { dict[k] = v; saveAll(); renderDict(); document.getElementById("dictKey").value = ""; document.getElementById("dictVal").value = ""; }
+  });
+
+  document.getElementById("catAdd").addEventListener("click", () => {
+    const name = document.getElementById("catName").value.trim();
+    const prefix = document.getElementById("catPrefix").value.trim();
+    if (name) {
+        // If editing existing by name (simple logic)
+        let existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+        if(existing) { existing.prefix = prefix; } 
+        else { categories.push({ id: "cat_" + Date.now().toString(36), name, prefix }); }
+        saveAll(); renderCategories(); document.getElementById("catName").value = ""; document.getElementById("catPrefix").value = "";
+    }
+  });
+
+  // Init
+  switchView('rapid'); // Default to rapid as requested toggle paradigm
+
+  // Lift the bottom dock above the keyboard when it appears
+  if (window.visualViewport) {
+    const dock = document.getElementById('bottom-dock');
+    function updateDockPosition() {
+      const kbHeight = Math.max(0,
+        window.innerHeight - window.visualViewport.height - (window.visualViewport.offsetTop || 0)
+      );
+      dock.style.bottom = kbHeight + 'px';
+    }
+    window.visualViewport.addEventListener('resize', updateDockPosition);
+    window.visualViewport.addEventListener('scroll', updateDockPosition);
+  }
+
+</script>
+
+<script>
+  // PWA Service Worker Registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.warn('SW registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
