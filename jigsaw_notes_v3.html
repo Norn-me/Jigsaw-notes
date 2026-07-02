@@ -1426,6 +1426,11 @@ function drawFolder(folder, depth) {
       } else {
           el.classList.remove('open'); ov.classList.remove('open');
           _modalStack = _modalStack.filter(m => m !== id);
+          // Consume the history entry this modal pushed on open, so closing
+          // via the ✕ button doesn't leave a stale entry behind.
+          if (history.state && history.state.modal === id) {
+              history.back();
+          }
       }
   }
 
