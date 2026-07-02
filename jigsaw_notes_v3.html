@@ -345,6 +345,149 @@
     }
     
     .media-btn { background:none; border:none; color:var(--dim); font-size:18px; cursor:pointer; padding:4px; }
+
+  /* ── Recycle Bin ── */
+  .bin-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg);
+    margin-bottom: 8px;
+  }
+  .bin-item-content { flex: 1; min-width: 0; }
+  .bin-item-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bin-item-meta { font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .bin-item-days {
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px;
+    background: rgba(255, 107, 107, 0.15); color: var(--danger); flex-shrink: 0; align-self: center;
+  }
+  .bin-item-days.safe { background: rgba(76, 211, 111, 0.12); color: var(--accent); }
+  .bin-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .bin-action-btn {
+    font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 8px; border: none; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .bin-action-btn:active { opacity: 0.7; }
+  .bin-action-btn.restore { background: rgba(76,211,111,0.15); color: var(--accent); border: 1px solid var(--accent); }
+  .bin-action-btn.perm-del { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid var(--danger); }
+  .bin-empty-btn {
+    width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    border: none; background: rgba(255,107,107,0.15); color: var(--danger); cursor: pointer;
+    border: 1px solid rgba(255,107,107,0.4); margin-bottom: 14px; transition: background 0.2s;
+  }
+  .bin-empty-btn:active { background: rgba(255,107,107,0.3); }
+  .bin-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--danger); color: #fff; border-radius: 50%;
+    font-size: 10px; font-weight: 700; width: 18px; height: 18px; margin-left: 6px;
+  }
+
+  /* ── Dict redesign ── */
+  .dict-edit-section {
+    padding: 12px 0 10px; border-bottom: 1px solid var(--border); display: none;
+  }
+  .dict-folder-btn {
+    width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer;
+    text-align: left; display: flex; align-items: center; gap: 8px; margin-top: 8px;
+    transition: border-color 0.2s;
+  }
+  .dict-folder-btn:hover { border-color: var(--accent); }
+  .dict-multi-bar {
+    display: none; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .dict-multi-bar.visible { display: flex; }
+  .dict-add-new-btn {
+    width: 100%; margin: 8px 0 4px; padding: 10px; border-radius: 8px;
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .dict-add-new-btn:hover { border-color: var(--accent); background: rgba(76,211,111,0.05); }
+  .dict-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px; border-radius: 10px; border: 1px solid transparent;
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    margin-bottom: 4px;
+  }
+  .dict-row:hover { background: rgba(255,255,255,0.04); }
+  .dict-row.selected { border-color: var(--accent); background: rgba(76,211,111,0.08); }
+  .dict-check {
+    width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; transition: all 0.15s; color: var(--panel);
+  }
+  .dict-row.selected .dict-check { background: var(--accent); border-color: var(--accent); }
+  .dict-kv { flex: 1; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dict-folder-chip {
+    font-size: 11px; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--dim); cursor: pointer; flex-shrink: 0;
+    white-space: nowrap; transition: border-color 0.15s, color 0.15s;
+  }
+  .dict-folder-chip.scoped { border-color: var(--accent); color: var(--accent); background: rgba(76,211,111,0.08); }
+  .dict-del-btn {
+    background: none; border: none; color: var(--dim); font-size: 15px;
+    cursor: pointer; padding: 2px 4px; flex-shrink: 0; line-height: 1;
+  }
+  .dict-del-btn:active { color: var(--danger); }
+
+  /* ── Folder Access Modal ── */
+  .fa-row {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+    margin-bottom: 4px; transition: background 0.15s, border-color 0.15s;
+  }
+  .fa-row:hover { background: rgba(255,255,255,0.04); }
+  .fa-row.checked { border-color: var(--accent); background: rgba(76,211,111,0.08); }
+  .fa-check {
+    width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; transition: all 0.15s;
+  }
+  .fa-check.checked { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+  .fa-check.inherited { background: rgba(76,211,111,0.3); border-color: var(--accent); color: var(--accent); }
+  .fa-allow-all-btn {
+    width: 100%; padding: 12px; border-radius: 8px;
+    border: 1px solid var(--accent); background: rgba(76,211,111,0.1);
+    color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer;
+    margin-bottom: 10px; transition: background 0.2s;
+  }
+  .fa-allow-all-btn:active { background: rgba(76,211,111,0.2); }
+  .fa-apply-btn {
+    width: 100%; padding: 12px; border-radius: 8px; border: none;
+    background: var(--accent); color: var(--panel); font-size: 14px;
+    font-weight: 700; cursor: pointer; margin-top: 10px;
+  }
+
+  /* ── Formatting Toolbar ── */
+  .format-toolbar {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  #bottom-dock.editor-mode .format-toolbar { display: flex; }
+  .format-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 15px;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    line-height: 1.4;
+  }
+  .format-btn:active { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+  #fmtBold   { font-weight: 800; }
+  #fmtItalic { font-style: italic; }
+  #fmtUnder  { text-decoration: underline; }
+  #fmtStrike { text-decoration: line-through; }
   </style>
 </head>
 <body>
@@ -359,6 +502,7 @@
   
   <div class="sidebar-actions">
     <button class="btn-sidebar" id="menuCatsBtn">⚙️ Categories</button>
+    <button class="btn-sidebar" id="menuBinBtn" style="position:relative;">🗑️ Bin<span class="bin-badge" id="binBadge" style="display:none;"></span></button>
   </div>
 
   <div class="pinned-notes-box" id="pinnedNotesBox" style="display: none;">
@@ -385,17 +529,34 @@
   </div>
 </div>
 
-<div class="modal" id="dictModal">
+<div class="modal" id="dictModal" style="max-height:88vh;">
   <div class="modal-header">
-    <h2>📖 Dictionary</h2>
+    <h2>📖 Shorthand Dictionary</h2>
     <button class="close-sidebar" id="closeDictBtn">✕</button>
   </div>
-  <div class="modal-row">
-    <input id="dictKey" type="text" placeholder="key (mtg)" autocomplete="off" autocapitalize="off">
-    <input id="dictVal" type="text" placeholder="text (meeting)" autocomplete="off" autocapitalize="off">
-    <button id="dictAdd">Save</button>
+
+  <!-- Edit / Add form -->
+  <div class="dict-edit-section" id="dictEditSection">
+    <div class="modal-row" style="margin-bottom:0;">
+      <input id="dictKey" type="text" placeholder="key (e.g. mtg)" autocomplete="off" autocapitalize="off">
+      <input id="dictVal" type="text" placeholder="text (e.g. meeting)" autocomplete="off" autocapitalize="off">
+      <button id="dictAdd">Save</button>
+    </div>
+    <button class="dict-folder-btn" id="dictFolderAccessBtn">
+      <span>📂</span><span id="dictFolderAccessLabel">Allowed in: All Folders</span>
+    </button>
   </div>
-  <div class="modal-body" id="dictList" style="display: flex; flex-direction: column; gap:4px;"></div>
+
+  <!-- Multi-select toolbar -->
+  <div class="dict-multi-bar" id="dictMultiBar">
+    <span id="dictMultiCount" style="font-size:13px;font-weight:600;flex:1;">0 selected</span>
+    <button class="bin-action-btn restore" id="dictMultiFoldersBtn">📂 Folders</button>
+    <button class="bin-action-btn perm-del" id="dictMultiDeleteBtn">🗑 Delete</button>
+    <button class="select-action cancel" id="dictMultiCancelBtn" style="padding:5px 10px;font-size:12px;">✕</button>
+  </div>
+
+  <button class="dict-add-new-btn" id="dictAddNewBtn">+ Add Shorthand</button>
+  <div class="modal-body" id="dictList" style="display:flex;flex-direction:column;"></div>
 </div>
 
 <div class="modal" id="catModal">
@@ -436,17 +597,18 @@
     <label style="display:flex;align-items:center;gap:8px;font-weight:bold;cursor:pointer;">
       <input type="checkbox" id="folderShorthandToggle"> Enable Shorthand Expansion
     </label>
-    <hr style="border:0;border-top:1px solid var(--border);margin:8px 0;">
-    <div>
-        <h3 style="margin:0 0 8px 0;font-size:14px;">Folder Dictionary Overrides</h3>
-        <div class="modal-row" style="margin-bottom:8px;">
-            <input id="folderDictKey" type="text" placeholder="key (e.g. mtg)" autocomplete="off" autocapitalize="off">
-            <input id="folderDictVal" type="text" placeholder="text (e.g. meeting)" autocomplete="off" autocapitalize="off">
-            <button id="folderDictAdd">Add</button>
-        </div>
-        <div id="folderDictList" style="display:flex;flex-direction:column;gap:4px;"></div>
-    </div>
+    <p style="font-size:12px;color:var(--dim);margin:0;">To manage which shorthands are available in this folder, open the 📖 Dictionary from the bottom dock and use the 📂 folder access button on each shorthand.</p>
   </div>
+</div>
+
+<!-- Folder Access Modal (for shorthand dict) -->
+<div class="modal" id="folderAccessModal" style="max-height:88vh;">
+  <div class="modal-header">
+    <h2>📂 Folder Access</h2>
+    <button class="close-sidebar" id="closeFolderAccessBtn">✕</button>
+  </div>
+  <p style="font-size:12px;color:var(--dim);margin:0 0 10px;">Choose which folders this shorthand works in. Sub-folders inherit from their parent.</p>
+  <div class="modal-body" id="folderAccessList" style="display:flex;flex-direction:column;"></div>
 </div>
 
 <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;" />
@@ -498,6 +660,13 @@
     </div>
     <button class="dock-dict-btn" id="dictFab">📖</button>
   </div>
+  <!-- Formatting toolbar: only visible in editor mode -->
+  <div class="format-toolbar" id="formatToolbar">
+    <button class="format-btn" id="fmtBold"   title="Bold">B</button>
+    <button class="format-btn" id="fmtItalic" title="Italic">I</button>
+    <button class="format-btn" id="fmtUnder"  title="Underline">U</button>
+    <button class="format-btn" id="fmtStrike" title="Strikethrough">S</button>
+  </div>
   <div class="input-row">
     <button class="media-btn" id="dockMicBtn" style="padding:0 8px;font-size:18px;">🎤</button>
     <button class="media-btn" id="dockPhotoBtn" style="padding:0 8px 0 0;font-size:18px;margin-right:4px;">📷</button>
@@ -544,19 +713,42 @@
   <div class="modal-body" id="bulkMoveFolderList" style="display:flex;flex-direction:column;gap:4px;"></div>
 </div>
 
+<!-- Recycle Bin Modal -->
+<div class="modal" id="binModal" style="max-height:85vh;">
+  <div class="modal-header">
+    <h2>🗑️ Recycle Bin</h2>
+    <button class="close-sidebar" id="closeBinBtn">✕</button>
+  </div>
+  <div class="modal-body" id="binModalBody" style="display:flex;flex-direction:column;">
+    <!-- populated by renderBinModal() -->
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
   const DICT_KEY = "jigsaw_dict_v3";
-  const FOLDER_DICT_KEY = "jigsaw_folder_dict_v3";
   const ENTRIES_KEY = "jigsaw_entries_v3";
   const FOLDERS_KEY = "jigsaw_folders_v3";
   const RECENT_KEY = "jigsaw_recent_v3";
   const RECENT_NOTES_KEY = "jigsaw_recent_notes_v3";
   const CATS_KEY = "jigsaw_cats_v3";
   const PINNED_NOTES_KEY = "jigsaw_pinned_v3";
+  const BIN_KEY = "jigsaw_bin_v3";
+  const BIN_TTL_DAYS = 15;
 
-  let folderDicts = JSON.parse(localStorage.getItem(FOLDER_DICT_KEY)) || {};
+  // Migrate dict from old {key:val} object to new [{id,key,val,folders}] array format
+  function migrateDict(raw) {
+    if (!raw) return [
+      { id: 'sh_0', key: 'mtg',  val: 'meeting',  folders: null },
+      { id: 'sh_1', key: 'tmrw', val: 'tomorrow', folders: null },
+      { id: 'sh_2', key: 'w/',   val: 'with',     folders: null }
+    ];
+    if (Array.isArray(raw)) return raw; // already new format
+    return Object.entries(raw).map(([k, v], i) => ({ id: 'sh_lg_' + i, key: k, val: v, folders: null }));
+  }
+
+  let dict = migrateDict(JSON.parse(localStorage.getItem(DICT_KEY)));
   let folders = JSON.parse(localStorage.getItem(FOLDERS_KEY)) || [{ id: 'root', name: 'Home', parentId: null, shorthandEnabled: true }];
   folders = folders.map(f => {
       if (f.shorthandEnabled === undefined) f.shorthandEnabled = true;
@@ -565,6 +757,7 @@
   let recentFolders = JSON.parse(localStorage.getItem(RECENT_KEY)) || ['root'];
   let recentNotes = JSON.parse(localStorage.getItem(RECENT_NOTES_KEY)) || [];
   let pinnedNotes = JSON.parse(localStorage.getItem(PINNED_NOTES_KEY)) || [];
+  let recycleBin = JSON.parse(localStorage.getItem(BIN_KEY)) || [];
   let dict = JSON.parse(localStorage.getItem(DICT_KEY)) || { "mtg": "meeting", "tmrw": "tomorrow", "w/": "with" };
   
   let defaultCats = [
@@ -593,13 +786,113 @@
 
   function saveAll() {
     localStorage.setItem(DICT_KEY, JSON.stringify(dict));
-    localStorage.setItem(FOLDER_DICT_KEY, JSON.stringify(folderDicts));
     localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
     localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
     localStorage.setItem(RECENT_KEY, JSON.stringify(recentFolders));
     localStorage.setItem(RECENT_NOTES_KEY, JSON.stringify(recentNotes));
     localStorage.setItem(CATS_KEY, JSON.stringify(categories));
     localStorage.setItem(PINNED_NOTES_KEY, JSON.stringify(pinnedNotes));
+    localStorage.setItem(BIN_KEY, JSON.stringify(recycleBin));
+    updateBinBadge();
+  }
+
+  // ── Recycle Bin helpers ──
+  function softDeleteEntry(entry) {
+    entry.deletedAt = Date.now();
+    recycleBin.unshift(entry);
+  }
+
+  function daysLeft(deletedAt) {
+    const elapsed = (Date.now() - deletedAt) / (1000 * 60 * 60 * 24);
+    return Math.max(0, Math.ceil(BIN_TTL_DAYS - elapsed));
+  }
+
+  function autoPurgeBin() {
+    const cutoff = Date.now() - BIN_TTL_DAYS * 24 * 60 * 60 * 1000;
+    const toDelete = recycleBin.filter(e => e.deletedAt < cutoff);
+    toDelete.forEach(e => {
+      if (e.audioId) deleteBlob('audio', e.audioId);
+      if (e.imageId) deleteBlob('images', e.imageId);
+    });
+    recycleBin = recycleBin.filter(e => e.deletedAt >= cutoff);
+    saveAll();
+  }
+
+  function updateBinBadge() {
+    const badge = document.getElementById('binBadge');
+    if (!badge) return;
+    const count = recycleBin.length;
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function renderBinModal() {
+    const body = document.getElementById('binModalBody');
+    body.innerHTML = '';
+    if (recycleBin.length === 0) {
+      body.innerHTML = '<div style="color:var(--dim);font-size:13px;text-align:center;padding:24px 0;">🗑️ Recycle bin is empty</div>';
+      return;
+    }
+    const emptyBtn = document.createElement('button');
+    emptyBtn.className = 'bin-empty-btn';
+    emptyBtn.textContent = `Empty Bin (${recycleBin.length})`;
+    emptyBtn.onclick = () => {
+      if (!confirm(`Permanently delete all ${recycleBin.length} note(s) in the bin?`)) return;
+      recycleBin.forEach(e => {
+        if (e.audioId) deleteBlob('audio', e.audioId);
+        if (e.imageId) deleteBlob('images', e.imageId);
+      });
+      recycleBin = [];
+      saveAll();
+      renderBinModal();
+      showToast('Bin emptied');
+    };
+    body.appendChild(emptyBtn);
+    const note15 = document.createElement('div');
+    note15.style.cssText = 'font-size:11px;color:var(--dim);margin-bottom:10px;';
+    note15.textContent = 'Notes are permanently deleted after 15 days.';
+    body.appendChild(note15);
+    recycleBin.forEach(entry => {
+      const remaining = daysLeft(entry.deletedAt);
+      const isSafe = remaining > 7;
+      const item = document.createElement('div');
+      item.className = 'bin-item';
+      const deletedDate = new Date(entry.deletedAt).toLocaleDateString();
+      item.innerHTML = `
+        <div class="bin-item-content">
+          <div class="bin-item-title">${escapeHTML(entry.title || 'Untitled')}</div>
+          <div class="bin-item-meta">Deleted ${deletedDate} · ${escapeHTML(getFolderName(entry.folderId))}</div>
+          <div class="bin-actions">
+            <button class="bin-action-btn restore" data-id="${entry.id}">↩ Restore</button>
+            <button class="bin-action-btn perm-del" data-id="${entry.id}">✕ Delete</button>
+          </div>
+        </div>
+        <div class="bin-item-days ${isSafe ? 'safe' : ''}">${remaining}d</div>
+      `;
+      item.querySelector('.restore').onclick = () => {
+        recycleBin = recycleBin.filter(e => e.id !== entry.id);
+        delete entry.deletedAt;
+        entries.unshift(entry);
+        saveAll();
+        renderBinModal();
+        renderRapidView();
+        showToast('Note restored');
+      };
+      item.querySelector('.perm-del').onclick = () => {
+        if (!confirm('Permanently delete this note?')) return;
+        if (entry.audioId) deleteBlob('audio', entry.audioId);
+        if (entry.imageId) deleteBlob('images', entry.imageId);
+        recycleBin = recycleBin.filter(e => e.id !== entry.id);
+        saveAll();
+        renderBinModal();
+        showToast('Note permanently deleted');
+      };
+      body.appendChild(item);
+    });
   }
 
   // ── Tier 4 #15 & #16: IndexedDB Setup ──
@@ -751,16 +1044,26 @@
     return { catIds, clean: trimmed || "Empty" };
   }
 
+  // Returns true if a dict entry's shorthand is allowed in the given folder (including ancestor inheritance)
+  function isEntryAllowedInFolder(entry, folderId) {
+    if (!entry.folders || entry.folders.length === 0) return true; // null/empty = all folders
+    let cur = folderId;
+    while (cur) {
+      if (entry.folders.includes(cur)) return true;
+      const f = folders.find(f => f.id === cur);
+      cur = f ? f.parentId : null;
+    }
+    return false;
+  }
+
   function expandShorthand(text) {
     const folder = folders.find(f => f.id === currentFolderId);
     if (folder && folder.shorthandEnabled === false) return text;
-    const folderOverride = folderDicts[currentFolderId] || {};
-    const mergedDict = { ...dict, ...folderOverride };
-    const keys = Object.keys(mergedDict).sort((a, b) => b.length - a.length);
-    let words = text.split(/(\s+)/); 
+    const allowed = dict.filter(e => isEntryAllowedInFolder(e, currentFolderId));
+    let words = text.split(/(\s+)/);
     words = words.map(tok => {
-      const match = keys.find(k => k.toLowerCase() === tok.trim().toLowerCase());
-      return match ? mergedDict[match] : tok;
+      const entry = allowed.find(e => e.key.toLowerCase() === tok.trim().toLowerCase());
+      return entry ? entry.val : tok;
     });
     return words.join("");
   }
@@ -1092,11 +1395,14 @@
 
     div.querySelector(".del").addEventListener("click", (ev) => {
       ev.stopPropagation();
-      if(confirm("Delete entry?")) { 
-          if(e.audioId) deleteBlob('audio', e.audioId);
-          if(e.imageId) deleteBlob('images', e.imageId);
-          entries = entries.filter(en => en.id !== e.id); 
+      if(confirm("Move to recycle bin?")) { 
+          const entry = entries.find(en => en.id === e.id);
+          if (entry) softDeleteEntry(entry);
+          entries = entries.filter(en => en.id !== e.id);
+          pinnedNotes = pinnedNotes.filter(id => id !== e.id);
+          recentNotes = recentNotes.filter(id => id !== e.id);
           saveAll(); renderRapidView(); 
+          showToast('Moved to bin');
       }
     });
     parent.appendChild(div);
@@ -1319,36 +1625,182 @@ function drawFolder(folder, depth) {
     toggleModal('folderSettingsModal', true);
   }
 
-  function renderFolderDict() {
-    const list = document.getElementById("folderDictList");
-    list.innerHTML = "";
-    if (!activeSettingsFolderId) return;
-    const fd = folderDicts[activeSettingsFolderId] || {};
-    Object.keys(fd).sort().forEach(k => {
-      const row = document.createElement("div"); row.className = "list-item";
-      row.innerHTML = `<div style="flex:1;"><b>${escapeHTML(k)}</b> → ${escapeHTML(fd[k])}</div><span class="del">✕</span>`;
-      row.onclick = (e) => {
-        if(e.target.classList.contains('del')) { 
-            delete folderDicts[activeSettingsFolderId][k]; 
-            saveAll(); renderFolderDict(); return; 
-        }
-        document.getElementById("folderDictKey").value = k; document.getElementById("folderDictVal").value = fd[k];
-      };
-      list.appendChild(row);
-    });
+  // ── Dict multi-select state ──
+  let dictSelectedIds = new Set();
+  let dictEditingId = null; // null = new entry, string = existing entry id
+  let _faTargetIds = [];          // dict entry ids being folder-access edited
+  let _faChecked = null;          // null = all, array = specific folder ids
+
+  function getDictFolderLabel(entry) {
+    if (!entry.folders || entry.folders.length === 0) return 'All Folders';
+    return `${entry.folders.length} folder${entry.folders.length !== 1 ? 's' : ''}`;
   }
 
   function renderDict() {
-    const list = document.getElementById("dictList"); list.innerHTML = "";
-    Object.keys(dict).sort().forEach(k => {
-      const row = document.createElement("div"); row.className = "list-item";
-      row.innerHTML = `<div style="flex:1;"><b>${escapeHTML(k)}</b> → ${escapeHTML(dict[k])}</div><span class="del">✕</span>`;
-      row.onclick = (e) => {
-        if(e.target.classList.contains('del')) { delete dict[k]; saveAll(); renderDict(); return; }
-        document.getElementById("dictKey").value = k; document.getElementById("dictVal").value = dict[k];
-      };
+    const list = document.getElementById('dictList');
+    list.innerHTML = '';
+    // Multi-select bar
+    const bar = document.getElementById('dictMultiBar');
+    if (dictSelectedIds.size > 0) {
+      bar.classList.add('visible');
+      document.getElementById('dictMultiCount').textContent = `${dictSelectedIds.size} selected`;
+    } else {
+      bar.classList.remove('visible');
+    }
+    dict.forEach(entry => {
+      const isSelected = dictSelectedIds.has(entry.id);
+      const isScoped = entry.folders && entry.folders.length > 0;
+      const row = document.createElement('div');
+      row.className = 'dict-row' + (isSelected ? ' selected' : '');
+      row.innerHTML = `
+        <div class="dict-check">${isSelected ? '✓' : ''}</div>
+        <div class="dict-kv"><b>${escapeHTML(entry.key)}</b> <span style="color:var(--dim)">→</span> ${escapeHTML(entry.val)}</div>
+        <span class="dict-folder-chip ${isScoped ? 'scoped' : ''}" title="Folder access">📂 ${escapeHTML(getDictFolderLabel(entry))}</span>
+        <button class="dict-del-btn" title="Delete">✕</button>
+      `;
+      // Checkbox toggle
+      row.querySelector('.dict-check').addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (dictSelectedIds.has(entry.id)) dictSelectedIds.delete(entry.id);
+        else dictSelectedIds.add(entry.id);
+        renderDict();
+      });
+      // Click main content → open edit form
+      row.querySelector('.dict-kv').addEventListener('click', () => openDictEdit(entry.id));
+      // Folder chip → folder access modal for this entry
+      row.querySelector('.dict-folder-chip').addEventListener('click', ev => {
+        ev.stopPropagation();
+        openFolderAccess([entry.id]);
+      });
+      // Delete
+      row.querySelector('.dict-del-btn').addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (!confirm(`Delete shorthand "${entry.key}"?`)) return;
+        dict = dict.filter(e => e.id !== entry.id);
+        dictSelectedIds.delete(entry.id);
+        saveAll(); renderDict();
+      });
       list.appendChild(row);
     });
+    if (dict.length === 0) list.innerHTML = '<div style="color:var(--dim);font-size:13px;padding:12px 2px;">No shorthands yet. Tap + Add Shorthand.</div>';
+  }
+
+  function openDictEdit(id) {
+    dictEditingId = id;
+    const sec = document.getElementById('dictEditSection');
+    sec.style.display = 'block';
+    if (id === null) {
+      document.getElementById('dictKey').value = '';
+      document.getElementById('dictVal').value = '';
+      updateDictFolderLabel(null);
+    } else {
+      const entry = dict.find(e => e.id === id);
+      if (entry) {
+        document.getElementById('dictKey').value = entry.key;
+        document.getElementById('dictVal').value = entry.val;
+        updateDictFolderLabel(entry.folders);
+      }
+    }
+    document.getElementById('dictKey').focus();
+  }
+
+  function updateDictFolderLabel(folders) {
+    const lbl = document.getElementById('dictFolderAccessLabel');
+    lbl.textContent = 'Allowed in: ' + (!folders || folders.length === 0 ? 'All Folders' : `${folders.length} folder${folders.length !== 1 ? 's' : ''}`);
+  }
+
+  // ── Folder Access Modal ──
+  function isInheritedFA(folderId) {
+    if (!_faChecked) return false;
+    const f = folders.find(f => f.id === folderId);
+    if (!f || !f.parentId) return false;
+    let cur = f.parentId;
+    while (cur) {
+      if (_faChecked.includes(cur)) return true;
+      const p = folders.find(f => f.id === cur);
+      cur = p ? p.parentId : null;
+    }
+    return false;
+  }
+
+  function openFolderAccess(ids) {
+    _faTargetIds = ids;
+    if (ids.length === 1) {
+      const entry = dict.find(e => e.id === ids[0]);
+      _faChecked = entry && entry.folders ? [...entry.folders] : null;
+    } else {
+      _faChecked = null;
+    }
+    renderFolderAccessModal();
+    toggleModal('folderAccessModal', true);
+  }
+
+  function renderFolderAccessModal() {
+    const list = document.getElementById('folderAccessList');
+    list.innerHTML = '';
+    // Allow All button
+    const allBtn = document.createElement('button');
+    allBtn.className = 'fa-allow-all-btn';
+    allBtn.textContent = '✨ Allow in All Folders';
+    allBtn.onclick = () => { _faChecked = null; applyFolderAccess(); toggleModal('folderAccessModal', false); };
+    list.appendChild(allBtn);
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:11px;color:var(--dim);margin-bottom:10px;';
+    hint.textContent = 'Checked folders allow the shorthand. Sub-folders inherit automatically.';
+    list.appendChild(hint);
+    // Folder tree
+    function drawFA(folder, depth) {
+      const isChecked = _faChecked !== null && _faChecked.includes(folder.id);
+      const isInherited = !isChecked && isInheritedFA(folder.id);
+      const row = document.createElement('div');
+      row.className = 'fa-row' + (isChecked ? ' checked' : '');
+      row.style.paddingLeft = (12 + depth * 18) + 'px';
+      const icon = depth === 0 ? '🏠' : (depth === 1 ? '📂' : '📄');
+      const chk = document.createElement('div');
+      chk.className = 'fa-check' + (isChecked ? ' checked' : (isInherited ? ' inherited' : ''));
+      chk.textContent = (isChecked || isInherited) ? '✓' : '';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = `font-size:14px;flex:1;color:${isInherited ? 'var(--dim)' : 'var(--text)'};`;
+      lbl.innerHTML = `${icon} ${escapeHTML(folder.name)}${isInherited ? ' <span style="font-size:11px;color:var(--accent);">(inherited)</span>' : ''}`;
+      row.appendChild(chk);
+      row.appendChild(lbl);
+      row.onclick = () => {
+        if (_faChecked === null) {
+          // Moving from "all" to specific: start with just this folder
+          _faChecked = [folder.id];
+        } else if (_faChecked.includes(folder.id)) {
+          _faChecked = _faChecked.filter(id => id !== folder.id);
+          if (_faChecked.length === 0) _faChecked = null;
+        } else {
+          _faChecked.push(folder.id);
+        }
+        renderFolderAccessModal();
+      };
+      list.appendChild(row);
+      folders.filter(f => f.parentId === folder.id).forEach(c => drawFA(c, depth + 1));
+    }
+    const root = folders.find(f => f.id === 'root');
+    if (root) drawFA(root, 0);
+    // Apply button
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'fa-apply-btn';
+    applyBtn.textContent = 'Apply';
+    applyBtn.onclick = () => { applyFolderAccess(); toggleModal('folderAccessModal', false); };
+    list.appendChild(applyBtn);
+  }
+
+  function applyFolderAccess() {
+    _faTargetIds.forEach(id => {
+      const entry = dict.find(e => e.id === id);
+      if (entry) entry.folders = _faChecked ? [..._faChecked] : null;
+    });
+    // Update label if currently in edit form
+    if (dictEditingId !== null && _faTargetIds.includes(dictEditingId)) {
+      const e = dict.find(e => e.id === dictEditingId);
+      if (e) updateDictFolderLabel(e.folders);
+    }
+    saveAll();
+    renderDict();
   }
 
   function renderCategories() {
@@ -1471,7 +1923,6 @@ function drawFolder(folder, depth) {
   document.getElementById("menuBtn").addEventListener("click", () => { renderSidebarFolders(); toggleModal('sidebar', true); });
   document.getElementById("closeSidebarBtn").addEventListener("click", () => toggleModal('sidebar', false));
   
-  document.getElementById("dictFab").addEventListener("click", () => { renderDict(); toggleModal('dictModal', true); });
   document.getElementById("closeDictBtn").addEventListener("click", () => toggleModal('dictModal', false));
 
   document.getElementById("menuCatsBtn").addEventListener("click", () => { renderCategories(); toggleModal('catModal', true); });
@@ -1488,17 +1939,75 @@ function drawFolder(folder, depth) {
     const folder = folders.find(f => f.id === activeSettingsFolderId);
     if (folder) { folder.shorthandEnabled = e.target.checked; saveAll(); }
   });
-  document.getElementById("folderDictAdd").addEventListener("click", () => {
-    if (!activeSettingsFolderId) return;
-    const k = document.getElementById("folderDictKey").value.trim().toLowerCase();
-    const v = document.getElementById("folderDictVal").value.trim();
-    if (k && v) {
-        if (!folderDicts[activeSettingsFolderId]) folderDicts[activeSettingsFolderId] = {};
-        folderDicts[activeSettingsFolderId][k] = v;
-        saveAll(); renderFolderDict();
-        document.getElementById("folderDictKey").value = ""; document.getElementById("folderDictVal").value = "";
+
+  // ── Dict modal listeners ──
+  document.getElementById('dictFab').addEventListener('click', () => {
+    dictSelectedIds.clear();
+    dictEditingId = null;
+    document.getElementById('dictEditSection').style.display = 'none';
+    renderDict();
+    toggleModal('dictModal', true);
+  });
+  document.getElementById('dictAddNewBtn').addEventListener('click', () => {
+    dictEditingId = null;
+    openDictEdit(null);
+  });
+  document.getElementById('dictAdd').addEventListener('click', () => {
+    const k = document.getElementById('dictKey').value.trim();
+    const v = document.getElementById('dictVal').value.trim();
+    if (!k || !v) { showToast('Key and text are required'); return; }
+    if (dictEditingId !== null) {
+      // Update existing
+      const entry = dict.find(e => e.id === dictEditingId);
+      if (entry) { entry.key = k; entry.val = v; }
+    } else {
+      // Add new (inherit current folder access temp state from _faChecked if FA was opened)
+      const newEntry = { id: 'sh_' + Date.now().toString(36), key: k, val: v, folders: null };
+      // If folder access was configured for the edit form, apply it
+      if (_faTargetIds.length === 0) newEntry.folders = null; // fresh entry = all
+      dict.push(newEntry);
+      dictEditingId = newEntry.id;
+    }
+    saveAll();
+    renderDict();
+    document.getElementById('dictEditSection').style.display = 'none';
+    dictEditingId = null;
+    showToast('Shorthand saved');
+  });
+  document.getElementById('dictFolderAccessBtn').addEventListener('click', () => {
+    // If currently editing an existing entry, open FA for it
+    if (dictEditingId !== null) {
+      openFolderAccess([dictEditingId]);
+    } else {
+      // Adding new: create a temporary placeholder entry first
+      const k = document.getElementById('dictKey').value.trim();
+      const v = document.getElementById('dictVal').value.trim();
+      if (!k || !v) { showToast('Fill in key and text first'); return; }
+      const tmp = { id: 'sh_' + Date.now().toString(36), key: k, val: v, folders: null };
+      dict.push(tmp);
+      dictEditingId = tmp.id;
+      saveAll();
+      renderDict();
+      openFolderAccess([tmp.id]);
     }
   });
+  // Multi-select actions
+  document.getElementById('dictMultiCancelBtn').addEventListener('click', () => {
+    dictSelectedIds.clear(); renderDict();
+  });
+  document.getElementById('dictMultiDeleteBtn').addEventListener('click', () => {
+    if (dictSelectedIds.size === 0) return;
+    if (!confirm(`Delete ${dictSelectedIds.size} shorthand(s)?`)) return;
+    dict = dict.filter(e => !dictSelectedIds.has(e.id));
+    dictSelectedIds.clear();
+    saveAll(); renderDict();
+    showToast('Deleted');
+  });
+  document.getElementById('dictMultiFoldersBtn').addEventListener('click', () => {
+    if (dictSelectedIds.size === 0) return;
+    openFolderAccess([...dictSelectedIds]);
+  });
+  document.getElementById('closeFolderAccessBtn').addEventListener('click', () => toggleModal('folderAccessModal', false));
 
   // Tag Clicks
   document.getElementById("editorFolderBadge").addEventListener("click", () => { renderSelectModals(); toggleModal('selectFolderModal', true); });
@@ -1617,7 +2126,8 @@ function drawFolder(folder, depth) {
   document.getElementById('selectDeleteBtn').addEventListener('click', () => {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
-    if (!confirm(`Delete ${count} note(s)?`)) return;
+    if (!confirm(`Move ${count} note(s) to recycle bin?`)) return;
+    entries.forEach(e => { if (selectedIds.has(e.id)) softDeleteEntry(e); });
     entries = entries.filter(e => !selectedIds.has(e.id));
     // Also remove from pinned/recent
     pinnedNotes = pinnedNotes.filter(id => !selectedIds.has(id));
@@ -1625,7 +2135,7 @@ function drawFolder(folder, depth) {
     saveAll();
     exitSelectMode();
     renderRapidView();
-    showToast(`Deleted ${count} note(s)`);
+    showToast(`Moved ${count} note(s) to bin`);
   });
   document.getElementById('selectMoveBtn').addEventListener('click', () => {
     if (selectedIds.size === 0) return;
@@ -1714,6 +2224,43 @@ function drawFolder(folder, depth) {
       updateEditorUI();
   });
 
+  // ── Formatting toolbar ──
+  function formatText(marker) {
+    const ta = document.getElementById('noteContent');
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    const val   = ta.value;
+    const mLen  = marker.length;
+    const selected = val.slice(start, end);
+
+    // Toggle OFF: if selection is already wrapped with this marker, remove it
+    if (start >= mLen && end <= val.length - mLen) {
+      if (val.slice(start - mLen, start) === marker && val.slice(end, end + mLen) === marker) {
+        ta.value = val.slice(0, start - mLen) + selected + val.slice(end + mLen);
+        ta.setSelectionRange(start - mLen, end - mLen);
+        ta.focus();
+        autoSaveNote();
+        return;
+      }
+    }
+
+    // Toggle ON: wrap selection (or insert empty markers with cursor inside)
+    if (selected) {
+      ta.value = val.slice(0, start) + marker + selected + marker + val.slice(end);
+      ta.setSelectionRange(start + mLen, end + mLen);
+    } else {
+      ta.value = val.slice(0, start) + marker + marker + val.slice(start);
+      ta.setSelectionRange(start + mLen, start + mLen);
+    }
+    ta.focus();
+    autoSaveNote();
+  }
+
+  document.getElementById('fmtBold').addEventListener('click',   () => formatText('**'));
+  document.getElementById('fmtItalic').addEventListener('click', () => formatText('*'));
+  document.getElementById('fmtUnder').addEventListener('click',  () => formatText('__'));
+  document.getElementById('fmtStrike').addEventListener('click', () => formatText('~~'));
+
   // Live shorthand expansion in Note mode (fires on Space, Enter, punctuation)
   document.getElementById("noteContent").addEventListener('keydown', (e) => {
     const triggers = [' ', 'Enter', ',', '.', ';', ':', '!', '?'];
@@ -1729,18 +2276,16 @@ function drawFolder(folder, depth) {
     const word = val.slice(wordStart, pos);
     if (!word) return;
 
-    // Look up in dictionary (case-insensitive)
+    // Look up in dictionary (case-insensitive), respecting folder access
     const folder = folders.find(f => f.id === currentFolderId);
     if (folder && folder.shorthandEnabled === false) return;
-    const folderOverride = folderDicts[currentFolderId] || {};
-    const mergedDict = { ...dict, ...folderOverride };
-    const keys = Object.keys(mergedDict);
-    const matchKey = keys.find(k => k.toLowerCase() === word.toLowerCase());
-    if (!matchKey) return;
+    const allowed = dict.filter(en => isEntryAllowedInFolder(en, currentFolderId));
+    const matchEntry = allowed.find(en => en.key.toLowerCase() === word.toLowerCase());
+    if (!matchEntry) return;
 
     // Prevent default so the trigger character is inserted after replacement
     e.preventDefault();
-    const expansion = mergedDict[matchKey];
+    const expansion = matchEntry.val;
     const insertChar = e.key === 'Enter' ? '\n' : e.key;
     const newVal = val.slice(0, wordStart) + expansion + insertChar + val.slice(pos);
     ta.value = newVal;
@@ -1766,11 +2311,7 @@ function drawFolder(folder, depth) {
     renderSidebarFolders();
   });
 
-  document.getElementById("dictAdd").addEventListener("click", () => {
-    const k = document.getElementById("dictKey").value.trim();
-    const v = document.getElementById("dictVal").value.trim();
-    if (k && v) { dict[k] = v; saveAll(); renderDict(); document.getElementById("dictKey").value = ""; document.getElementById("dictVal").value = ""; }
-  });
+  // (dict save listener is now wired above in the dict modal section)
 
   document.getElementById("catAdd").addEventListener("click", () => {
     const name = document.getElementById("catName").value.trim();
@@ -1784,7 +2325,16 @@ function drawFolder(folder, depth) {
     }
   });
 
+  // ── Recycle Bin event listeners ──
+  document.getElementById('menuBinBtn').addEventListener('click', () => {
+    renderBinModal();
+    toggleModal('binModal', true);
+  });
+  document.getElementById('closeBinBtn').addEventListener('click', () => toggleModal('binModal', false));
+
   // Init
+  autoPurgeBin(); // Remove notes older than 15 days on startup
+  updateBinBadge();
   switchView('rapid'); // Default to rapid as requested toggle paradigm
 
   // Lift the bottom dock above the keyboard when it appears
