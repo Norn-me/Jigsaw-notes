@@ -1,0 +1,17 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Spacing scale" subtitle="4px base unit" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 20px; }
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 7px; }
+  .bar { height: 14px; background: var(--color-primary); border-radius: 3px; }
+  .lbl { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); width: 96px; }
+</style></head>
+<body>
+<div id="w"></div>
+<script>
+  const scale = [["space-1",4],["space-2",8],["space-3",12],["space-4",16],["space-6",24],["space-8",32],["space-12",48]];
+  document.getElementById("w").innerHTML = scale.map(([n,px]) =>
+    `<div class="row"><span class="lbl">${n} · ${px}</span><div class="bar" style="width:${px}px"></div></div>`).join("");
+</script>
+</body></html>

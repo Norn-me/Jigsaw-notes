@@ -1,0 +1,58 @@
+<!-- @dsCard group="Components" viewport="700x260" name="Avatar, Badge, Chip, User" subtitle="Identity & status elements" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { padding: 20px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .lbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); width: 100%; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react">
+const { Avatar, AvatarGroup, Badge, Chip, User, Code, Kbd, Divider } = window.JigsawNoteDesignSystem_94fd87;
+const colors = ["default","primary","secondary","success","warning","danger"];
+function Demo() {
+  return (
+    <div>
+      <div className="lbl">Avatars · group · badge</div>
+      <div className="row">
+        <Avatar name="Mara Lin" />
+        <Avatar name="KO" color="primary" isBordered />
+        <Avatar size="lg" />
+        <AvatarGroup max={3} total={7}>
+          <Avatar name="A B" /><Avatar name="C D" /><Avatar name="E F" /><Avatar name="G H" />
+        </AvatarGroup>
+        <Badge content="5" color="danger"><Avatar name="In Box" /></Badge>
+        <Badge content="" isDot color="success"><Avatar name="On Line" /></Badge>
+      </div>
+      <div className="lbl">Chips · solid / flat / bordered / dot</div>
+      <div className="row">{colors.map(c => <Chip key={c} color={c}>{c}</Chip>)}</div>
+      <div className="row">
+        <Chip variant="flat" color="primary">flat</Chip>
+        <Chip variant="bordered" color="secondary">bordered</Chip>
+        <Chip variant="dot" color="success">active</Chip>
+        <Chip variant="flat" color="warning" onClose={()=>{}}>closable</Chip>
+      </div>
+      <div className="lbl">User · code · kbd</div>
+      <div className="row">
+        <User name="Priya Anand" description="priya@jigsawnote.app" avatarProps={{name:"Priya Anand", color:"primary", isBordered:true}} />
+        <Divider orientation="vertical" style={{height:32}} />
+        <Code color="primary">npm i jigsawnote</Code>
+        <Kbd keys={["command"]}>K</Kbd>
+        <Kbd keys={["command","shift"]}>N</Kbd>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

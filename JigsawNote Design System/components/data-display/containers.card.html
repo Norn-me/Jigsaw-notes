@@ -1,0 +1,44 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Card, Accordion, Table" subtitle="Surfaces & data containers" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style> body { padding: 20px; } .cols { display: grid; grid-template-columns: 300px 1fr; gap: 22px; align-items: start; } </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react">
+const { Card, CardHeader, CardBody, CardFooter, Accordion, Table, Chip, Button } = window.JigsawNoteDesignSystem_94fd87;
+function Demo() {
+  return (
+    <div className="cols">
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <Card isHoverable>
+          <CardHeader><strong style={{fontFamily:"var(--font-display)"}}>Weekly review</strong></CardHeader>
+          <CardBody><span style={{color:"var(--text-muted)",fontSize:"var(--text-small)"}}>12 notes · updated 2h ago. Wrap up open threads before Friday.</span></CardBody>
+          <CardFooter><Chip size="sm" variant="flat" color="primary">work</Chip><Button size="sm" variant="light" color="primary" style={{marginLeft:"auto"}}>Open</Button></CardFooter>
+        </Card>
+        <Accordion variant="bordered" defaultExpandedKeys={["a"]} items={[
+          {key:"a",title:"Getting started",content:"Create a notebook, drop in notes, connect the pieces."},
+          {key:"b",title:"Shortcuts",content:"⌘K opens the command bar; ⌘N makes a new note."},
+        ]} />
+      </div>
+      <Table isStriped selectionMode="multiple" defaultSelectedKeys={[]}
+        columns={[{key:"note",label:"Note"},{key:"tag",label:"Tag"},{key:"edited",label:"Edited",align:"right"}]}
+        rows={[
+          {key:"1",note:"Roadmap draft",tag:<Chip size="sm" variant="flat" color="primary">work</Chip>,edited:"2h"},
+          {key:"2",note:"Trip packing",tag:<Chip size="sm" variant="flat" color="secondary">personal</Chip>,edited:"1d"},
+          {key:"3",note:"Reading list",tag:<Chip size="sm" variant="flat" color="success">ideas</Chip>,edited:"3d"},
+        ]} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

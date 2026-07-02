@@ -13,34 +13,38 @@
 <link rel="apple-touch-icon" href="./icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link rel="stylesheet" href="./JigsawNote%20Design%20System/styles.css">
 <title>Jigsaw Notes</title>
 <style>
   :root {
-    --bg: #161e17;
-    --fg: #d4ddd7;
-    --panel: #111911;
-    --border: #3d5242;
-    --accent: #4cd36f;
+    /* ── Aliased from JigsawNote Design System tokens ── */
+    --bg: var(--color-background, #161e17);
+    --fg: var(--color-foreground, #d4ddd7);
+    --panel: var(--surface-sidebar, #111911);
+    --border: var(--color-border, #3d5242);
+    --accent: var(--color-primary, #4cd36f);
     --bg-effect: #e8c39e;
     
     --text: var(--fg);
-    --dim: #8a998e;
-    --danger: #ff6b6b;
-    --card: var(--bg);
-    --card2: var(--panel);
+    --dim: var(--text-muted, #8a998e);
+    --danger: var(--color-danger, #ff6b6b);
+    --card: var(--surface-app, var(--bg));
+    --card2: var(--surface-sidebar, var(--panel));
   }
   
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
     background: var(--bg);
     color: var(--text);
     height: 100vh;
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   
   header {

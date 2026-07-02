@@ -1,0 +1,18 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Radius" subtitle="8 · 12 · 14 · full" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 20px; }
+  .row { display: flex; gap: 22px; align-items: flex-end; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 84px; height: 64px; background: var(--color-primary-flat); border: 2px solid var(--color-primary); }
+  .lbl { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+</style></head>
+<body>
+<div class="row">
+  <div class="cell"><div class="box" style="border-radius:var(--radius-small)"></div><span class="lbl">small · 8</span></div>
+  <div class="cell"><div class="box" style="border-radius:var(--radius-medium)"></div><span class="lbl">medium · 12</span></div>
+  <div class="cell"><div class="box" style="border-radius:var(--radius-large)"></div><span class="lbl">large · 14</span></div>
+  <div class="cell"><div class="box" style="border-radius:var(--radius-full);width:64px"></div><span class="lbl">full</span></div>
+</div>
+</body></html>

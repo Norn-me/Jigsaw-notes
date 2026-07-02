@@ -1,0 +1,5 @@
+/* JigsawNote — Webfonts
+   Inter (UI/body), Onest (display/brand), mono via system stack.
+   Both families exist in the source Figma; loaded from Google Fonts CDN. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Onest:wght@400;500;600;700&display=swap');

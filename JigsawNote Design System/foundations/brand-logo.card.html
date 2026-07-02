@@ -1,0 +1,30 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Logo & wordmark" subtitle="App mark + JigsawNote lockup" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 22px; display: flex; gap: 40px; align-items: center; }
+  .lockup { display: flex; align-items: center; gap: 16px; }
+  .lockup img { width: 76px; height: 76px; border-radius: 18px; }
+  .word { font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: -0.02em; color: var(--color-foreground); }
+  .word b { color: var(--color-primary); }
+  .stack { display: flex; flex-direction: column; gap: 4px; }
+  .tag { font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle); }
+  .mono { display: flex; gap: 14px; align-items: center; }
+  .mono img { width: 48px; height: 48px; border-radius: 12px; }
+</style></head>
+<body>
+  <div class="stack">
+    <span class="tag">Primary lockup</span>
+    <div class="lockup">
+      <img src="../assets/jigsawnote-mark-512.png" alt="JigsawNote" />
+      <span class="word">Jigsaw<b>Note</b></span>
+    </div>
+  </div>
+  <div class="stack">
+    <span class="tag">App mark</span>
+    <div class="mono">
+      <img src="../assets/jigsawnote-mark-512.png" alt="mark" style="background:var(--surface-sidebar)" />
+      <img src="../assets/jigsawnote-mark-512.png" alt="mark" style="background:#fff" />
+    </div>
+  </div>
+</body></html>

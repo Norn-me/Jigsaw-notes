@@ -1,0 +1,79 @@
+<!-- @dsCard group="App" viewport="1280x760" name="JigsawNote app" subtitle="Three-pane notes workspace" -->
+<!-- @startingPoint section="Screens" subtitle="JigsawNote notes workspace" viewport="1280x760" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>JigsawNote</title>
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+  #root, .app { height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="data.js"></script>
+<script type="text/babel" data-presets="react" src="Sidebar.jsx"></script>
+<script type="text/babel" data-presets="react" src="NoteList.jsx"></script>
+<script type="text/babel" data-presets="react" src="Editor.jsx"></script>
+<script type="text/babel" data-presets="react" src="CommandBar.jsx"></script>
+<script type="text/babel" data-presets="react">
+const { Sidebar, NoteList, Editor, CommandBar } = window;
+const VIEW_TITLE = { all: "All notes", pinned: "Pinned", reminders: "Reminders", archive: "Archive", notebook: "Notebook" };
+
+function App() {
+  const [notes, setNotes] = React.useState(window.JN_DATA.notes);
+  const [view, setView] = React.useState("all");
+  const [activeNb, setActiveNb] = React.useState(null);
+  const [activeId, setActiveId] = React.useState("n1");
+  const [query, setQuery] = React.useState("");
+  const [cmd, setCmd] = React.useState(false);
+
+  React.useEffect(() => {
+    const h = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd(true); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") { e.preventDefault(); newNote(); }
+    };
+    window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
+  });
+
+  const nbName = () => (window.JN_DATA.notebooks.find((n) => n.id === activeNb) || {}).name || "Notebook";
+  let filtered = notes;
+  if (view === "pinned") filtered = notes.filter((n) => n.pinned);
+  else if (view === "notebook") filtered = notes.filter((n) => n.nb === activeNb);
+  else if (view === "reminders" || view === "archive") filtered = [];
+  if (query) filtered = filtered.filter((n) => (n.title + n.body).toLowerCase().includes(query.toLowerCase()));
+
+  const active = notes.find((n) => n.id === activeId) || null;
+  const update = (nx) => setNotes((prev) => prev.map((n) => (n.id === nx.id ? nx : n)));
+  const pin = () => active && update({ ...active, pinned: !active.pinned });
+  function newNote() {
+    const id = "n" + Date.now();
+    const nb = activeNb || "nb-work";
+    const color = (window.JN_DATA.notebooks.find((n) => n.id === nb) || {}).color || "primary";
+    const note = { id, nb, title: "Untitled note", tags: [], pinned: false, edited: "now", color, body: "" };
+    setNotes((prev) => [note, ...prev]); setActiveId(id);
+  }
+
+  return (
+    <div className="app" style={{ display: "flex", background: "var(--surface-app)" }}>
+      <Sidebar view={view} setView={(v) => { setView(v); setActiveNb(null); }} notebooks={window.JN_DATA.notebooks}
+        tags={window.JN_DATA.tags} activeNb={activeNb} setActiveNb={setActiveNb} user={window.JN_DATA.user} onCommand={() => setCmd(true)} />
+      <NoteList title={view === "notebook" ? nbName() : VIEW_TITLE[view]} notes={filtered} activeId={activeId}
+        onSelect={setActiveId} onNew={newNote} query={query} setQuery={setQuery} />
+      <Editor note={filtered.length || view === "all" || view === "notebook" || view === "pinned" ? active : null} onChange={update} onPin={pin} />
+      <CommandBar open={cmd} onClose={() => setCmd(false)} notes={notes} onSelect={setActiveId} onNew={newNote} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

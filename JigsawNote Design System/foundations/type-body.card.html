@@ -1,0 +1,22 @@
+<!-- @dsCard group="Type" viewport="700x210" name="Body & UI — Inter" subtitle="Text scale used across components" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 20px; font-family: var(--font-sans); }
+  .line { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .tag { font-family: var(--font-mono); font-size: 10px; color: var(--text-subtle); width: 88px; flex-shrink: 0; }
+  .lg { font-size: var(--text-large); }
+  .md { font-size: var(--text-medium); }
+  .sm { font-size: var(--text-small); }
+  .ti { font-size: var(--text-tiny); color: var(--text-muted); }
+  .muted { color: var(--text-muted); }
+</style></head>
+<body>
+  <div class="line"><span class="tag">large · 18</span><span class="lg">The quick brown fox jumps over the lazy dog</span></div>
+  <div class="line"><span class="tag">medium · 16</span><span class="md">The quick brown fox jumps over the lazy dog</span></div>
+  <div class="line"><span class="tag">small · 14</span><span class="sm">The quick brown fox jumps over the lazy dog</span></div>
+  <div class="line"><span class="tag">tiny · 12</span><span class="ti">The quick brown fox jumps over the lazy dog</span></div>
+  <div class="line"><span class="tag">weights</span>
+    <span class="md"><span style="font-weight:400">Regular</span> · <span style="font-weight:500">Medium</span> · <span style="font-weight:600">Semibold</span> · <span style="font-weight:700">Bold</span></span>
+  </div>
+</body></html>

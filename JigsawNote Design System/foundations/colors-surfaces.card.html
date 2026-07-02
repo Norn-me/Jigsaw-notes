@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Surfaces & content" subtitle="Elevation layers on the dark base" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 18px; }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .sw { border-radius: var(--radius-medium); border: 1px solid var(--color-divider); overflow: hidden; }
+  .chip { height: 60px; }
+  .meta { padding: 7px 10px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .meta b { display: block; font-family: var(--font-sans); font-size: 12px; color: var(--color-foreground); font-weight: 600; margin-bottom: 2px; }
+</style></head>
+<body>
+<div class="row">
+  <div class="sw"><div class="chip" style="background:var(--surface-app)"></div><div class="meta"><b>app</b>#161e17</div></div>
+  <div class="sw"><div class="chip" style="background:var(--surface-sidebar)"></div><div class="meta"><b>sidebar</b>#111911</div></div>
+  <div class="sw"><div class="chip" style="background:var(--color-content1)"></div><div class="meta"><b>content1</b>card</div></div>
+  <div class="sw"><div class="chip" style="background:var(--color-content2)"></div><div class="meta"><b>content2</b>hover</div></div>
+  <div class="sw"><div class="chip" style="background:var(--color-content4)"></div><div class="meta"><b>content4</b>raised</div></div>
+</div>
+</body></html>

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Colors" viewport="700x210" name="Semantic colors" subtitle="Role colors with 100–500 tints" -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><link rel="stylesheet" href="../styles.css" />
+<style>
+  body { padding: 18px; }
+  .role { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .name { width: 88px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+  .scale { display: flex; gap: 6px; flex: 1; }
+  .box { flex: 1; height: 30px; border-radius: 7px; border: 1px solid var(--color-divider); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 9px; color: rgba(0,0,0,.55); }
+</style></head>
+<body>
+<div id="wrap"></div>
+<script>
+  const roles = ["primary","secondary","success","warning","danger","default"];
+  const steps = [100,200,300,400,500];
+  const wrap = document.getElementById("wrap");
+  roles.forEach(r => {
+    const row = document.createElement("div"); row.className = "role";
+    row.innerHTML = `<div class="name">${r}</div><div class="scale">` +
+      steps.map(s => `<div class="box" style="background:var(--color-${r}-${s})">${s}</div>`).join("") + `</div>`;
+    wrap.appendChild(row);
+  });
+</script>
+</body></html>

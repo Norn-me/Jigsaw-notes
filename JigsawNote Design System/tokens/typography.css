@@ -1,0 +1,37 @@
+/* JigsawNote — Typography
+   Inter for UI/body, Onest for display/brand headings, system mono for code. */
+
+:root {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Onest", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+
+  /* Font weights */
+  --fw-light: 300;      /* @kind font */
+  --fw-regular: 400;    /* @kind font */
+  --fw-medium: 500;     /* @kind font */
+  --fw-semibold: 600;   /* @kind font */
+  --fw-bold: 700;       /* @kind font */
+  --fw-extrabold: 800;  /* @kind font */
+
+  /* Body / control type scale (HeroUI leading) */
+  --text-tiny: 0.75rem;      /* 12 / 16 */
+  --text-small: 0.875rem;    /* 14 / 20 */
+  --text-medium: 1rem;       /* 16 / 24 */
+  --text-large: 1.125rem;    /* 18 / 28 */
+  --leading-tiny: 1rem;
+  --leading-small: 1.25rem;
+  --leading-medium: 1.5rem;
+  --leading-large: 1.75rem;
+
+  /* Display scale (Onest) */
+  --display-xs: 1.5rem;      /* 24 */
+  --display-sm: 1.875rem;    /* 30 */
+  --display-md: 2.25rem;     /* 36 */
+  --display-lg: 3rem;        /* 48 */
+  --display-xl: 3.75rem;     /* 60 */
+
+  --tracking-tight: -0.02em;  /* @kind other */
+  --tracking-normal: 0;       /* @kind other */
+  --tracking-wide: 0.02em;    /* @kind other */
+}

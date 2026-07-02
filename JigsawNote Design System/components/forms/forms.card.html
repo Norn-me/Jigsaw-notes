@@ -1,0 +1,57 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Form controls" subtitle="Input, Select, Checkbox, Radio, Switch, Slider, OTP" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<style>
+  body { padding: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; max-width: 660px; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .lbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react">
+const { Input, Select, Checkbox, CheckboxGroup, Radio, RadioGroup, Switch, Slider, NumberInput, InputOTP } = window.JigsawNoteDesignSystem_94fd87;
+function Demo() {
+  const [otp, setOtp] = React.useState("12");
+  return (
+    <div className="grid">
+      <div className="stack">
+        <Input label="Notebook title" placeholder="Untitled notebook" defaultValue="Q3 Planning" />
+        <Input label="Bordered" variant="bordered" placeholder="Search notes…" />
+        <Input label="Invalid" isInvalid errorMessage="Title is required" defaultValue="" />
+        <Select label="Workspace" defaultValue="team" items={[{key:"me",label:"Personal"},{key:"team",label:"Team space"},{key:"arch",label:"Archive"}]} />
+      </div>
+      <div className="stack">
+        <CheckboxGroup label="Tags" defaultValue={["work"]} orientation="horizontal">
+          <Checkbox value="work">Work</Checkbox>
+          <Checkbox value="ideas">Ideas</Checkbox>
+          <Checkbox value="todo">To-do</Checkbox>
+        </CheckboxGroup>
+        <RadioGroup label="Sort" defaultValue="edited" orientation="horizontal">
+          <Radio value="edited">Edited</Radio>
+          <Radio value="created">Created</Radio>
+          <Radio value="az">A–Z</Radio>
+        </RadioGroup>
+        <div style={{display:"flex",gap:18,alignItems:"center"}}>
+          <Switch defaultSelected>Reminders</Switch>
+          <Switch color="secondary">Focus</Switch>
+          <NumberInput label="" defaultValue={3} min={0} max={10} style={{width:120}} />
+        </div>
+        <Slider label="Zoom" defaultValue={60} />
+        <InputOTP length={4} value={otp} onChange={setOtp} />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

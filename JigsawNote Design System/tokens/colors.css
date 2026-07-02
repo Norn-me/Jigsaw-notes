@@ -1,0 +1,138 @@
+/* JigsawNote — Color System
+   Dark-first, single theme. Structure follows HeroUI's semantic roles
+   (default / primary / secondary / success / warning / danger + content layers)
+   re-tuned to the JigsawNote palette:
+     accent green #4cd36f · bg #161e17 · sidebar #111911
+     text #d4ddd7 · border #3d5242 · highlight/notif #fc8747
+*/
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Brand primitives ---- */
+  --jn-green: #4cd36f;      /* primary accent */
+  --jn-orange: #fc8747;     /* highlight / notification */
+  --jn-bg: #161e17;         /* app background */
+  --jn-sidebar: #111911;    /* rails, sidebars, deepest surface */
+  --jn-ink: #d4ddd7;        /* primary text */
+  --jn-line: #3d5242;       /* borders */
+
+  /* ---- Primary — JigsawNote green (dark scale: 50 darkest → 900 lightest) ---- */
+  --color-primary-50:  #0e2917;
+  --color-primary-100: #123a1f;
+  --color-primary-200: #1f5330;
+  --color-primary-300: #2d7d49;
+  --color-primary-400: #38a55f;
+  --color-primary-500: #4cd36f;
+  --color-primary-600: #6edb8b;
+  --color-primary-700: #98e6ac;
+  --color-primary-800: #c4f1d0;
+  --color-primary-900: #e9f9ef;
+  --color-primary: #4cd36f;
+  --color-primary-foreground: #06140b;
+
+  /* ---- Secondary — highlight orange ---- */
+  --color-secondary-50:  #3a1a0b;
+  --color-secondary-100: #52250f;
+  --color-secondary-200: #7d3818;
+  --color-secondary-300: #bc5522;
+  --color-secondary-400: #ed6d2e;
+  --color-secondary-500: #fc8747;
+  --color-secondary-600: #fda471;
+  --color-secondary-700: #fdbb93;
+  --color-secondary-800: #fed6c0;
+  --color-secondary-900: #fff0e8;
+  --color-secondary: #fc8747;
+  --color-secondary-foreground: #1a0d04;
+
+  /* ---- Success — clear signal green (distinct from primary) ---- */
+  --color-success-50:  #052816;
+  --color-success-100: #09501f;
+  --color-success-200: #0e7930;
+  --color-success-300: #12a150;
+  --color-success-400: #17c964;
+  --color-success-500: #17c964;
+  --color-success-600: #45d483;
+  --color-success-700: #74dfa2;
+  --color-success-800: #a2e9c1;
+  --color-success-900: #e8faf0;
+  --color-success: #17c964;
+  --color-success-foreground: #05140b;
+
+  /* ---- Warning — amber ---- */
+  --color-warning-50:  #312107;
+  --color-warning-100: #62420e;
+  --color-warning-200: #936316;
+  --color-warning-300: #c4841d;
+  --color-warning-400: #f5a524;
+  --color-warning-500: #f5a524;
+  --color-warning-600: #f7b750;
+  --color-warning-700: #f9c97c;
+  --color-warning-800: #fbdba7;
+  --color-warning-900: #fefce8;
+  --color-warning: #f5a524;
+  --color-warning-foreground: #16110a;
+
+  /* ---- Danger — red ---- */
+  --color-danger-50:  #310413;
+  --color-danger-100: #610726;
+  --color-danger-200: #920b3a;
+  --color-danger-300: #c20e4d;
+  --color-danger-400: #f31260;
+  --color-danger-500: #f31260;
+  --color-danger-600: #f54180;
+  --color-danger-700: #f871a0;
+  --color-danger-800: #faa0bf;
+  --color-danger-900: #fee7ef;
+  --color-danger: #f31260;
+  --color-danger-foreground: #fff0f5;
+
+  /* ---- Default — neutral green-grey (dark scale) ---- */
+  --color-default-50:  #131a15;
+  --color-default-100: #1c261d;
+  --color-default-200: #263328;
+  --color-default-300: #3d5242;
+  --color-default-400: #566b58;
+  --color-default-500: #6f8a72;
+  --color-default-600: #93a896;
+  --color-default-700: #b7c6b9;
+  --color-default-800: #d7e0d9;
+  --color-default-900: #eef2ef;
+  --color-default: #263328;
+  --color-default-foreground: #d4ddd7;
+
+  /* ---- Layout ---- */
+  --color-background: #161e17;
+  --color-foreground: #d4ddd7;
+  --color-foreground-500: #6f8a72;
+  --color-focus: #4cd36f;
+  --color-overlay: rgba(0,0,0,0.55);
+  --color-divider: rgba(212,221,215,0.10);
+  --color-border: #3d5242;
+
+  /* ---- Content surfaces (elevation) ---- */
+  --color-content1: #1c261d;   /* cards, popovers */
+  --color-content1-foreground: #d4ddd7;
+  --color-content2: #263328;   /* nested / hover */
+  --color-content2-foreground: #d4ddd7;
+  --color-content3: #314034;
+  --color-content3-foreground: #d4ddd7;
+  --color-content4: #3d5242;
+  --color-content4-foreground: #eef2ef;
+
+  /* ---- Semantic app surfaces ---- */
+  --surface-app: #161e17;
+  --surface-sidebar: #111911;
+  --surface-card: #1c261d;
+  --surface-raised: #222e23;
+  --text-muted: #8a9a8f;
+  --text-subtle: #6f8a72;
+
+  /* ---- Flat / soft tints (variant="flat") ---- */
+  --color-primary-flat: rgba(76,211,111,0.16);
+  --color-secondary-flat: rgba(252,135,71,0.16);
+  --color-success-flat: rgba(23,201,100,0.16);
+  --color-warning-flat: rgba(245,165,36,0.16);
+  --color-danger-flat: rgba(243,18,96,0.16);
+  --color-default-flat: rgba(212,221,215,0.10);
+}
