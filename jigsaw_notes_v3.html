@@ -29,6 +29,17 @@
     --dim: var(--text-muted, #8a9a8f);
     --danger: var(--color-danger, #f31260);
     --surface: transparent;
+
+    /* Rounded-corner "bubbly" scale — overrides design-system defaults for this app only */
+    --radius-tiny: 8px;
+    --radius-small: 14px;
+    --radius-medium: 20px;
+    --radius-large: 28px;
+
+    /* Paper surface — light mint drawn from the existing primary scale, for contrast on the dashboard */
+    --surface-paper: var(--color-primary-900);
+    --text-on-paper: var(--color-primary-50);
+    --text-on-paper-muted: var(--color-primary-300);
   }
   *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; overflow: hidden; }
@@ -70,7 +81,7 @@
   body.select-mode .entry .del { display: none; }
   .overlay { position: fixed; inset: 0; background: var(--color-overlay); z-index: 99; opacity: 0; pointer-events: none; transition: opacity var(--dur-base) var(--ease-out); }
   .overlay.open { opacity: 1; pointer-events: auto; }
-  .sidebar { position: fixed; top: 0; left: -320px; width: 296px; height: 100%; background: var(--surface-sidebar); border-right: 1px solid var(--color-divider); transition: left var(--dur-slow) var(--ease-out); z-index: 100; display: flex; flex-direction: column; }
+  .sidebar { position: fixed; top: 0; left: -320px; width: 296px; height: 100%; background: var(--surface-sidebar); border-right: 1px solid var(--color-divider); border-radius: 0 var(--radius-large) var(--radius-large) 0; box-shadow: var(--shadow-large); overflow: hidden; transition: left var(--dur-slow) var(--ease-out); z-index: 100; display: flex; flex-direction: column; }
   .sidebar.open { left: 0; }
   .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-5) var(--space-4) var(--space-3); border-bottom: 1px solid var(--color-divider); }
   .sidebar-header h2 { margin: 0; font-size: var(--text-medium); font-weight: var(--fw-bold); letter-spacing: var(--tracking-tight); }
@@ -108,11 +119,11 @@
   .editor-action-divider { width: 1px; height: 18px; background: var(--color-divider); margin: 0 var(--space-1); }
   .folder-badge { padding: var(--space-1) var(--space-3); border-radius: var(--radius-small); font-weight: var(--fw-medium); font-size: var(--text-tiny); font-family: var(--font-sans); cursor: pointer; border: 1px solid var(--color-border); background: transparent; color: var(--text-muted); transition: border-color var(--dur-fast); }
   .folder-badge:hover { border-color: var(--color-primary); }
-  .tag-badge { padding: 3px var(--space-2); border-radius: 6px; font-weight: var(--fw-semibold); font-size: 11px; font-family: var(--font-sans); cursor: pointer; border: 1px solid rgba(76,211,111,0.3); background: var(--color-primary-flat); color: var(--color-primary); letter-spacing: 0.03em; text-transform: uppercase; }
-  .checklist-btn, .pin-btn { background: none; border: 1px solid var(--color-divider); border-radius: 7px; color: var(--text-muted); padding: var(--space-1) var(--space-2); font-family: var(--font-sans); cursor: pointer; transition: all var(--dur-fast); display: flex; align-items: center; justify-content: center; }
+  .tag-badge { padding: 3px var(--space-2); border-radius: var(--radius-tiny); font-weight: var(--fw-semibold); font-size: 11px; font-family: var(--font-sans); cursor: pointer; border: 1px solid rgba(76,211,111,0.3); background: var(--color-primary-flat); color: var(--color-primary); letter-spacing: 0.03em; text-transform: uppercase; }
+  .checklist-btn, .pin-btn { background: none; border: 1px solid var(--color-divider); border-radius: var(--radius-tiny); color: var(--text-muted); padding: var(--space-1) var(--space-2); font-family: var(--font-sans); cursor: pointer; transition: all var(--dur-fast); display: flex; align-items: center; justify-content: center; }
   .pin-btn { margin-left: 0; }
   .checklist-btn.active, .pin-btn.is-pinned { background: var(--color-primary-flat); color: var(--color-primary); border-color: rgba(76,211,111,0.35); }
-  .media-btn { background: none; border: none; color: var(--text-subtle); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 7px; cursor: pointer; transition: color var(--dur-fast), background var(--dur-fast); flex-shrink: 0; }
+  .media-btn { background: none; border: none; color: var(--text-subtle); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius-tiny); cursor: pointer; transition: color var(--dur-fast), background var(--dur-fast); flex-shrink: 0; }
   .media-btn:hover { color: var(--text-muted); background: var(--color-default-flat); }
   #noteContent { flex: 1; width: 100%; max-width: 768px; margin: 0 auto; background: var(--surface-app); color: var(--color-foreground); border: none; padding: var(--space-6) var(--space-5); font-size: var(--text-medium); line-height: 1.7; outline: none; font-family: var(--font-sans); white-space: pre-wrap; word-wrap: break-word; }
   .editor-audio { width: 100%; max-width: 768px; margin: 0 auto; padding: var(--space-4) var(--space-5) 0; background: transparent; }
@@ -124,24 +135,26 @@
   .checklist-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px; border: solid var(--surface-app); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
   .checklist-line[data-checked="true"] { color: var(--text-muted); text-decoration: line-through; }
   .format-btn.active { background: var(--color-primary-flat); border-color: rgba(76,211,111,0.4); color: var(--color-primary); }
-  #bottom-dock { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-app); border-top: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom)); z-index: 90; transition: bottom 0.1s ease-out; }
-  .dock-controls { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  #bottom-dock { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-app); border-top: 1px solid var(--color-divider); border-radius: var(--radius-large) var(--radius-large) 0 0; box-shadow: 0px -16px 32px rgba(0,0,0,0.4), 0px -4px 10px rgba(0,0,0,0.3); padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom)); z-index: 90; transition: bottom 0.1s ease-out; }
+  .dock-controls { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); transition: margin-bottom var(--dur-base) var(--ease-out); }
   #bottom-dock.editor-mode .dock-controls { margin-bottom: 0; }
-  #bottom-dock.editor-mode .input-row { display: none; }
+  .dock-stage { position: relative; display: grid; overflow: hidden; }
+  .dock-stage > .input-row, .dock-stage > .format-toolbar { grid-area: 1 / 1; transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out); }
+  #bottom-dock.editor-mode .input-row { transform: translateX(-32px); opacity: 0; pointer-events: none; }
   .view-toggle-inner { background: var(--surface-card); border: 1px solid var(--color-divider); border-radius: var(--radius-full); display: flex; padding: 3px; gap: 2px; flex: 1; }
   .view-toggle-btn { flex: 1; padding: var(--space-2) var(--space-3); border-radius: var(--radius-full); font-size: var(--text-small); font-weight: var(--fw-medium); font-family: var(--font-sans); color: var(--text-muted); background: transparent; border: none; cursor: pointer; transition: all var(--dur-base) var(--ease-out); white-space: nowrap; }
   .view-toggle-btn.active { background: var(--surface-raised); color: var(--color-foreground); font-weight: var(--fw-semibold); box-shadow: var(--shadow-small); }
   .dock-dict-btn { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: var(--radius-medium); border: 1px solid var(--color-divider); background: transparent; color: var(--text-muted); cursor: pointer; transition: border-color var(--dur-fast), color var(--dur-fast); flex-shrink: 0; }
   .dock-dict-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
-  .input-row { display: flex; align-items: center; background: var(--surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-medium); padding: 3px 3px 3px var(--space-3); transition: border-color var(--dur-base) var(--ease-out); }
+  .input-row { display: flex; align-items: center; background: var(--surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-medium); padding: 3px 3px 3px var(--space-3); transform: translateX(0); opacity: 1; }
   .input-row:focus-within { border-color: var(--color-primary); }
   #rapidEntry { flex: 1; font-size: var(--text-medium); font-family: var(--font-sans); padding: var(--space-2) var(--space-1); border: none; background: transparent; color: var(--color-foreground); outline: none; }
   #rapidEntry::placeholder { color: var(--text-muted); }
-  #rapidAddBtn { font-size: var(--text-small); font-weight: var(--fw-semibold); font-family: var(--font-sans); padding: var(--space-2) var(--space-4); border-radius: var(--radius-small); border: none; background: var(--color-primary); color: var(--color-primary-foreground); cursor: pointer; flex-shrink: 0; transition: opacity var(--dur-fast); }
+  #rapidAddBtn { font-size: var(--text-small); font-weight: var(--fw-semibold); font-family: var(--font-sans); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); border: none; background: var(--color-primary); color: var(--color-primary-foreground); cursor: pointer; flex-shrink: 0; transition: opacity var(--dur-fast); }
   #rapidAddBtn:active { opacity: 0.8; }
-  .format-toolbar { display: none; align-items: center; gap: var(--space-1); padding: var(--space-2) 0 var(--space-1); border-top: 1px solid var(--color-divider); margin-top: var(--space-2); overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #bottom-dock.editor-mode .format-toolbar { display: flex; }
-  .format-btn { background: var(--surface-card); border: 1px solid var(--color-divider); color: var(--color-foreground); border-radius: 7px; padding: var(--space-1) 14px; font-size: 14px; font-family: var(--font-sans); cursor: pointer; flex-shrink: 0; transition: background var(--dur-fast); }
+  .format-toolbar { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-2) 0 var(--space-1); overflow-x: auto; -webkit-overflow-scrolling: touch; transform: translateX(32px); opacity: 0; pointer-events: none; }
+  #bottom-dock.editor-mode .format-toolbar { transform: translateX(0); opacity: 1; pointer-events: auto; }
+  .format-btn { background: var(--surface-card); border: 1px solid var(--color-divider); color: var(--color-foreground); border-radius: var(--radius-tiny); padding: var(--space-1) 14px; font-size: 14px; font-family: var(--font-sans); cursor: pointer; flex-shrink: 0; transition: background var(--dur-fast); }
   .format-btn:active { background: var(--color-primary-flat); border-color: rgba(76,211,111,0.4); color: var(--color-primary); }
   #fmtBold { font-weight: 700; } #fmtItalic { font-style: italic; } #fmtUnder { text-decoration: underline; } #fmtStrike { text-decoration: line-through; }
   .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.96); background: var(--surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-large); width: 90%; max-width: 400px; padding: var(--space-5); z-index: 102; opacity: 0; pointer-events: none; transition: all var(--dur-base) var(--ease-out); display: flex; flex-direction: column; max-height: 80vh; box-shadow: var(--shadow-large); }
@@ -153,7 +166,7 @@
   .modal-row input { flex: 1; font-size: var(--text-small); font-family: var(--font-sans); padding: 10px var(--space-3); border-radius: var(--radius-small); border: 1px solid var(--color-border); background: var(--surface-app); color: var(--color-foreground); min-width: 0; outline: none; transition: border-color var(--dur-fast); }
   .modal-row input:focus { border-color: var(--color-primary); }
   .modal-row button { font-size: var(--text-small); font-family: var(--font-sans); padding: 0 var(--space-4); border-radius: var(--radius-small); border: none; background: var(--color-primary); color: var(--color-primary-foreground); font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap; }
-  .list-item { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-small); color: var(--text-muted); padding: 10px var(--space-2); border-bottom: 1px solid var(--color-divider); cursor: pointer; border-radius: 6px; transition: background var(--dur-fast); }
+  .list-item { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-small); color: var(--text-muted); padding: 10px var(--space-2); border-bottom: 1px solid var(--color-divider); cursor: pointer; border-radius: var(--radius-tiny); transition: background var(--dur-fast); }
   .list-item:hover { background: var(--color-default-flat); color: var(--color-foreground); }
   .list-item b { color: var(--color-foreground); }
   .list-item .del { color: var(--text-muted); padding: 0 6px; font-size: 14px; }
@@ -190,7 +203,7 @@
   .dict-row { display: flex; align-items: center; gap: var(--space-2); padding: 10px var(--space-2); border-radius: var(--radius-small); border: 1px solid transparent; cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast); margin-bottom: 3px; }
   .dict-row:hover { background: var(--color-default-flat); }
   .dict-row.selected { border-color: rgba(76,211,111,0.3); background: var(--color-primary-flat); }
-  .dict-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all var(--dur-fast); color: transparent; }
+  .dict-check { width: 18px; height: 18px; border-radius: var(--radius-tiny); border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all var(--dur-fast); color: transparent; }
   .dict-row.selected .dict-check { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-foreground); }
   .dict-kv { flex: 1; font-size: var(--text-small); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .dict-folder-chip { font-size: 11px; padding: 2px 7px; border-radius: var(--radius-small); border: 1px solid var(--color-divider); background: transparent; color: var(--text-muted); cursor: pointer; flex-shrink: 0; white-space: nowrap; font-family: var(--font-sans); transition: border-color var(--dur-fast), color var(--dur-fast); }
@@ -200,7 +213,7 @@
   .fa-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-small); cursor: pointer; border: 1px solid transparent; margin-bottom: 3px; transition: background var(--dur-fast), border-color var(--dur-fast); }
   .fa-row:hover { background: var(--color-default-flat); }
   .fa-row.checked { border-color: rgba(76,211,111,0.3); background: var(--color-primary-flat); }
-  .fa-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all var(--dur-fast); }
+  .fa-check { width: 18px; height: 18px; border-radius: var(--radius-tiny); border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all var(--dur-fast); }
   .fa-check.checked { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-foreground); }
   .fa-check.inherited { background: var(--color-primary-flat); border-color: var(--color-primary); color: var(--color-primary); }
   .fa-allow-all-btn { width: 100%; padding: 10px; border-radius: var(--radius-small); border: 1px solid rgba(76,211,111,0.4); background: var(--color-primary-flat); color: var(--color-primary); font-size: var(--text-small); font-family: var(--font-sans); font-weight: var(--fw-semibold); cursor: pointer; margin-bottom: 10px; }
@@ -217,6 +230,27 @@
   .export-label { flex: 1; }
   .export-desc { font-size: 11px; color: var(--text-muted); font-weight: 400; }
   @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(243,18,96,0.6); } 70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(243,18,96,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(243,18,96,0); } }
+
+  /* ── Home dashboard ── */
+  @keyframes dashIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .dash-hero { animation: dashIn var(--dur-slow) var(--ease-out); margin-bottom: var(--space-6); }
+  .dash-greeting { font-size: var(--text-large); font-weight: var(--fw-bold); letter-spacing: var(--tracking-tight); color: var(--color-foreground); margin: 0; }
+  .dash-date { font-size: var(--text-tiny); color: var(--text-muted); margin: 2px 0 var(--space-4); }
+  .dash-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+  .dash-chip { padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); font-size: var(--text-small); font-weight: var(--fw-semibold); font-family: var(--font-sans); cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: all var(--dur-fast) var(--ease-out); }
+  .dash-chip.chip-p { background: var(--color-primary); color: var(--color-primary-foreground); }
+  .dash-chip.chip-w { background: var(--surface-paper); color: var(--text-on-paper); }
+  .dash-chip.chip-o { background: var(--color-secondary); color: var(--color-secondary-foreground); }
+  .dash-chip.chip-d { background: var(--surface-card); color: var(--color-foreground); border-color: var(--color-divider); }
+  .dash-chip-new { background: transparent; border: 1px dashed var(--color-border); color: var(--text-muted); }
+  .dash-chip-new:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .dash-section-title { font-size: var(--text-tiny); font-weight: var(--fw-semibold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: var(--space-2); }
+  .dash-pinned-list { display: flex; flex-direction: column; gap: var(--space-2); }
+  .dash-pin-card { background: var(--surface-card); border: 1px solid var(--color-divider); border-radius: var(--radius-medium); padding: var(--space-3); cursor: pointer; transition: border-color var(--dur-fast) var(--ease-out); }
+  .dash-pin-card:hover { border-color: var(--color-border); }
+  .dash-pin-title { font-weight: var(--fw-semibold); font-size: var(--text-small); color: var(--color-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .dash-pin-preview { font-size: var(--text-tiny); color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dash-empty { color: var(--text-muted); font-size: var(--text-tiny); padding: var(--space-1) 0; }
 </style>
 </head>
 <body>
@@ -416,6 +450,7 @@
 
 <div class="view" id="view-rapid">
   <div class="rapid-scroll">
+    <div id="dashboardHeader"></div>
     <div id="dynamicListsContainer"></div>
   </div>
 </div>
@@ -430,21 +465,23 @@
       <iconify-icon icon="solar:notebook-linear" width="18"></iconify-icon>
     </button>
   </div>
-  <div class="format-toolbar" id="formatToolbar">
-    <button class="format-btn" id="fmtBold" title="Bold">B</button>
-    <button class="format-btn" id="fmtItalic" title="Italic">I</button>
-    <button class="format-btn" id="fmtUnder" title="Underline">U</button>
-    <button class="format-btn" id="fmtStrike" title="Strikethrough">S</button>
-  </div>
-  <div class="input-row">
-    <button class="media-btn" id="dockMicBtn" style="width:30px;height:30px;">
-      <iconify-icon icon="solar:microphone-3-linear" width="16"></iconify-icon>
-    </button>
-    <button class="media-btn" id="dockPhotoBtn" style="width:30px;height:30px;margin-right:2px;">
-      <iconify-icon icon="solar:camera-linear" width="16"></iconify-icon>
-    </button>
-    <input id="rapidEntry" type="text" placeholder="Type to log a note..." autocomplete="off" autocapitalize="off">
-    <button id="rapidAddBtn">Log</button>
+  <div class="dock-stage">
+    <div class="format-toolbar" id="formatToolbar">
+      <button class="format-btn" id="fmtBold" title="Bold">B</button>
+      <button class="format-btn" id="fmtItalic" title="Italic">I</button>
+      <button class="format-btn" id="fmtUnder" title="Underline">U</button>
+      <button class="format-btn" id="fmtStrike" title="Strikethrough">S</button>
+    </div>
+    <div class="input-row">
+      <button class="media-btn" id="dockMicBtn" style="width:30px;height:30px;">
+        <iconify-icon icon="solar:microphone-3-linear" width="16"></iconify-icon>
+      </button>
+      <button class="media-btn" id="dockPhotoBtn" style="width:30px;height:30px;margin-right:2px;">
+        <iconify-icon icon="solar:camera-linear" width="16"></iconify-icon>
+      </button>
+      <input id="rapidEntry" type="text" placeholder="Type to log a note..." autocomplete="off" autocapitalize="off">
+      <button id="rapidAddBtn">Log</button>
+    </div>
   </div>
 </div>
 
@@ -1047,7 +1084,93 @@
     return html;
   }
 
+  // ── Home dashboard (root folder only) ──
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 5) return "Good night";
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  }
+
+  function getDateLabel() {
+    return new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  function renderDashboard() {
+    const el = document.getElementById("dashboardHeader");
+    if (!el) return;
+    if (currentFolderId !== 'root' || searchActive) {
+      el.innerHTML = "";
+      return;
+    }
+
+    const chipClasses = ['chip-p', 'chip-w', 'chip-o', 'chip-d'];
+    const otherFolders = folders.filter(f => f.id !== 'root');
+    const chipsHtml = otherFolders.map((f, i) =>
+      `<div class="dash-chip ${chipClasses[i % chipClasses.length]}" data-folder-id="${f.id}">${escapeHTML(f.name)}</div>`
+    ).join('') + `<div class="dash-chip dash-chip-new" id="dashNewFolderChip">+ New folder</div>`;
+
+    const validPinned = pinnedNotes.filter(id => entries.some(e => e.id === id));
+    let pinnedHtml;
+    if (validPinned.length === 0) {
+      pinnedHtml = `<div class="dash-empty">No pinned notes yet.</div>`;
+    } else {
+      pinnedHtml = validPinned.map(id => {
+        const note = entries.find(e => e.id === id);
+        const lines = noteContentToText(note).split('\n');
+        const title = note.title || lines[0] || "Untitled";
+        const rest = lines.slice(1).join(' ').trim();
+        const preview = rest.length > 80 ? rest.slice(0, 80) + '…' : rest;
+        return `<div class="dash-pin-card" data-note-id="${id}">
+          <div class="dash-pin-title">${escapeHTML(title)}</div>
+          ${preview ? `<div class="dash-pin-preview">${escapeHTML(preview)}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    el.innerHTML = `
+      <div class="dash-hero">
+        <div class="dash-greeting">${getGreeting()}</div>
+        <div class="dash-date">${getDateLabel()}</div>
+        <div class="dash-chips">${chipsHtml}</div>
+        <div class="dash-pinned-section">
+          <div class="dash-section-title">Pinned</div>
+          <div class="dash-pinned-list">${pinnedHtml}</div>
+        </div>
+      </div>
+    `;
+
+    el.querySelectorAll('.dash-chip[data-folder-id]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        currentFolderId = chip.dataset.folderId;
+        updateRecents(currentFolderId);
+        switchView('rapid');
+      });
+    });
+
+    const newFolderChip = document.getElementById('dashNewFolderChip');
+    if (newFolderChip) {
+      newFolderChip.addEventListener('click', () => {
+        renderSidebarFolders();
+        toggleModal('sidebar', true);
+        const sidebarEl = document.getElementById('sidebar');
+        const focusInput = (ev) => {
+          if (ev.target !== sidebarEl) return;
+          document.getElementById('newFolderInput').focus();
+          sidebarEl.removeEventListener('transitionend', focusInput);
+        };
+        sidebarEl.addEventListener('transitionend', focusInput);
+      });
+    }
+
+    el.querySelectorAll('.dash-pin-card').forEach(card => {
+      card.addEventListener('click', () => openNote(card.dataset.noteId));
+    });
+  }
+
   function renderRapidView() {
+    renderDashboard();
     const container = document.getElementById("dynamicListsContainer");
     container.innerHTML = "";
 
@@ -1372,7 +1495,7 @@ function drawFolder(folder, depth) {
                 // Clean recent folders
                 recentFolders = recentFolders.filter(rId => !toDel.includes(rId));
                 if (toDel.includes(currentFolderId)) currentFolderId = 'root';
-                saveAll(); renderSidebarFolders();
+                saveAll(); renderSidebarFolders(); renderDashboard();
             } else if (e.target.classList.contains('f-settings')) {
                 openFolderSettings(folder.id);
             } else {
@@ -2195,7 +2318,7 @@ function drawFolder(folder, depth) {
     const newId = "f_" + Date.now().toString(36);
     folders.push({ id: newId, name: name, parentId: document.getElementById("newFolderParent").value });
     saveAll(); document.getElementById("newFolderInput").value = "";
-    renderSidebarFolders();
+    renderSidebarFolders(); renderDashboard();
   });
 
   // (dict save listener is now wired above in the dict modal section)
