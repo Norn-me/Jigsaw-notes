@@ -14,486 +14,203 @@
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
 <link rel="stylesheet" href="./JigsawNote%20Design%20System/styles.css">
-<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 <title>Jigsaw Notes</title>
 <style>
   :root {
-    /* ── Aliased from JigsawNote Design System tokens ── */
+    /* Back-compat aliases — referenced by inline styles generated in app logic below */
     --bg: var(--color-background, #161e17);
     --fg: var(--color-foreground, #d4ddd7);
     --panel: var(--surface-sidebar, #111911);
     --border: var(--color-border, #3d5242);
     --accent: var(--color-primary, #4cd36f);
-    --bg-effect: #e8c39e;
-    
+    --primary: var(--color-primary, #4cd36f);
     --text: var(--fg);
-    --dim: var(--text-muted, #8a998e);
-    --danger: var(--color-danger, #ff6b6b);
-    --card: var(--surface-app, var(--bg));
-    --card2: var(--surface-sidebar, var(--panel));
+    --dim: var(--text-muted, #8a9a8f);
+    --danger: var(--color-danger, #f31260);
+    --surface: transparent;
   }
-  
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    margin: 0;
-    font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-  
-  header {
-    padding: 16px 16px 12px;
-    background: var(--bg);
-    z-index: 10;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .header-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  #menuBtn {
-    background: none; border: none; color: var(--text);
-    font-size: 22px; cursor: pointer; padding: 4px; line-height: 1;
-  }
-  h1 { font-size: 18px; margin: 0; font-weight: 700; flex: 1; }
-  
-  .view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 80px; }
+  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body { font-family: var(--font-sans); background: var(--surface-app); color: var(--color-foreground); display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+  .view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding-bottom: 92px; }
   .view.hidden { display: none !important; }
-
-  .input-row {
-    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
-    margin: 0; padding: 6px 6px 6px 14px;
-    border-radius: 18px; border: 1px solid var(--border); background: var(--panel);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3); transition: border-color 0.2s;
-  }
-  .input-row:focus-within { border-color: var(--accent); }
-  #rapidEntry {
-    flex: 1; font-size: 16px; padding: 10px 0;
-    border: none; background: transparent; color: var(--text); outline: none;
-  }
-  #rapidAddBtn {
-    font-size: 15px; font-weight: 600; padding: 10px 16px; border-radius: 14px;
-    border: none; background: var(--accent); color: var(--panel); cursor: pointer; flex-shrink: 0;
-  }
-
-  .editor-meta {
-    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
-    border-bottom: 1px solid var(--border); background: var(--panel);
-  }
-  .tag-badge, .folder-badge {
-    padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;
-    cursor: pointer; border: 1px solid var(--border);
-  }
-  .folder-badge { background: var(--bg); color: var(--dim); }
-  .tag-badge { text-transform: uppercase; letter-spacing: 0.5px; background: rgba(76, 211, 111, 0.1); color: var(--accent); }
-
-  #noteContent {
-    flex: 1; width: 100%; resize: none; background: var(--bg); color: var(--text);
-    border: none; padding: 20px 16px; font-size: 16px; line-height: 1.6;
-    outline: none; font-family: inherit;
-  }
-
   #view-rapid { padding: 0; overflow: hidden; }
-  .rapid-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 160px; }
-  section.list { margin-top: 20px; border-radius: 12px; min-height: 50px; transition: background 0.2s;}
-  section.list.drag-over { background: rgba(255,255,255,0.05); }
-  
-  .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .list-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-  
-  .entries { display: flex; flex-direction: column; gap: 8px; }
-  .entry {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px; font-size: 15px;
-    line-height: 1.4; display: flex; justify-content: space-between;
-    align-items: flex-start; gap: 10px; cursor: grab;
-  }
-  .entry:active { cursor: grabbing; }
-  .entry-content { flex: 1; overflow: hidden; pointer-events: none; }
-  .entry-title { font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .entry-preview { font-size: 13px; color: var(--dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .entry .del { color: var(--dim); font-size: 18px; padding: 0 4px; line-height: 1; cursor: pointer; z-index: 2; }
-  .entry .del:active { color: var(--danger); }
-  .empty { color: var(--dim); font-size: 13px; padding: 10px 2px; }
-
-  .overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); z-index: 99; opacity: 0;
-    pointer-events: none; transition: opacity 0.3s;
-  }
-  .overlay.open { opacity: 1; pointer-events: auto; }
-  .sidebar {
-    position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
-    background: var(--panel); border-right: 1px solid var(--border);
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100;
-    display: flex; flex-direction: column;
-  }
-  .sidebar.open { left: 0; }
-  .sidebar-header { padding: 20px 16px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .sidebar-header h2 { margin: 0; font-size: 16px; }
-  .close-sidebar { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
-  
-  .sidebar-actions { padding: 16px; border-bottom: 1px solid var(--border); display:flex; gap:8px;}
-  .btn-sidebar { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
-  
-  .recent-folders-box { padding: 16px 16px 4px; border-bottom: 1px solid var(--border); }
-  .recent-folders-box h3 { margin: 0 0 10px; font-size: 11px; color: var(--dim); text-transform: uppercase; }
-  .recent-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .recent-chip {
-    background: var(--bg); border: 1px solid var(--border); color: var(--text);
-    font-size: 12px; padding: 6px 12px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
-  }
-  .recent-chip.active { background: var(--accent); color: var(--panel); border-color: var(--accent); font-weight: 600; }
-
-  .recent-note-item {
-    font-size: 13px; color: var(--text); padding: 8px 10px; border-radius: 6px;
-    background: var(--bg); border: 1px solid var(--border); cursor: pointer;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
-  }
-  .recent-note-item:active { border-color: var(--accent); }
-
-  .pinned-notes-box { padding: 16px 16px 4px; border-bottom: 1px solid var(--border); background: rgba(76, 211, 111, 0.05); }
-  .pinned-notes-box h3 { margin: 0 0 10px; font-size: 11px; color: var(--accent); text-transform: uppercase; }
-  .pinned-note-item {
-    font-size: 13px; color: var(--text); padding: 8px 10px; border-radius: 6px;
-    background: var(--bg); border: 1px solid var(--border); cursor: pointer;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
-    border-left: 3px solid var(--accent);
-  }
-  .pinned-note-item:active { border-color: var(--accent); }
-
-  .folder-tree-container { flex: 1; overflow-y: auto; padding: 12px 8px; }
-  .folder-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 12px; margin: 2px 0; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--dim); border: 1px solid transparent;
-  }
-  .folder-item.active { background: var(--bg); color: var(--accent); border-color: var(--border); font-weight: 600; }
-  .folder-indent-0 { margin-left: 0; }
-  .folder-indent-1 { margin-left: 16px; border-left: 2px solid var(--border); }
-  .folder-indent-2 { margin-left: 32px; border-left: 2px solid var(--border); }
-  .f-del { display:none; color: var(--dim); font-size: 14px; }
-  .folder-item:hover .f-del { display: block; }
-  
-  .add-folder-box { padding: 16px; border-top: 1px solid var(--border); background: var(--panel); }
-  .add-folder-box input, .add-folder-box select, .add-folder-box button {
-    width: 100%; font-size: 13px; padding: 10px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 8px; outline:none;
-  }
-  .add-folder-box button { background: var(--accent); color: var(--panel); font-weight: 600; border: none; cursor: pointer; }
-
-  /* ── Bottom Dock ── */
-  #bottom-dock {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--bg); border-top: 1px solid var(--border);
-    padding: 10px 16px max(14px, env(safe-area-inset-bottom));
-    z-index: 90; transition: bottom 0.1s ease-out;
-  }
-  .dock-controls {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
-  }
-  #bottom-dock.editor-mode .dock-controls { margin-bottom: 0; }
-  #bottom-dock.editor-mode .input-row { display: none; }
-  .view-toggle-inner {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 24px;
-    display: flex; padding: 4px; gap: 4px;
-  }
-  .dock-dict-btn {
-    background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    width: 42px; height: 42px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-    cursor: pointer; transition: transform 0.2s; flex-shrink: 0;
-  }
-  .dock-dict-btn:active { transform: scale(0.9); }
-
-  .modal {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
-    background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
-    width: 90%; max-width: 400px; padding: 20px; z-index: 102;
-    opacity: 0; pointer-events: none; transition: all 0.2s; display: flex; flex-direction: column; max-height: 80vh;
-  }
-  .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
-  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .modal-header h2 { margin: 0; font-size: 16px; }
-  .modal-body { overflow-y: auto; flex:1; }
-  
-  .modal-row { display: flex; gap: 6px; margin-bottom: 12px; }
-  .modal-row input { flex: 1; font-size: 13px; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); min-width: 0; outline:none;}
-  .modal-row button { font-size: 13px; padding: 0 16px; border-radius: 8px; border: none; background: var(--accent); color: var(--panel); font-weight: 600; cursor: pointer; }
-  
-  .list-item {
-    display: flex; justify-content: space-between; align-items: center; font-size: 13px;
-    color: var(--dim); padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 6px;
-  }
-  .list-item:hover { background: var(--bg); }
-  .list-item span b { color: var(--text); }
-  .list-item .del { color: var(--dim); padding: 0 6px; font-size: 16px; }
-
-  .view-toggle-btn {
-    padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;
-    color: var(--dim); background: transparent; border: none; cursor: pointer; transition: all 0.2s;
-  }
-  .view-toggle-btn.active { background: var(--bg); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-
-  .pin-btn {
-    background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--dim);
-    padding: 6px 10px; font-size: 14px; cursor: pointer; transition: all 0.2s;
-    margin-left: auto; /* Push to the right of the meta bar */
-  }
-  .pin-btn.is-pinned {
-    background: rgba(76, 211, 111, 0.15); color: var(--accent); border-color: var(--accent);
-  }
-
-  .toast {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
-    background: var(--panel); border: 1px solid var(--accent); color: var(--text);
-    padding: 10px 18px; border-radius: 20px; font-size: 13px;
-    opacity: 0; transition: all 0.25s ease; pointer-events: none; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── Tier 3 #8: Search ── */
-  .search-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 16px; background: var(--bg);
-    border-bottom: 1px solid var(--border); flex-shrink: 0;
-  }
+  .rapid-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-4) var(--space-4) 148px; }
+  .icon-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--radius-small); border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); flex-shrink: 0; }
+  .icon-btn:hover { background: var(--color-default-flat); color: var(--color-foreground); }
+  .icon-btn:active { background: var(--color-primary-flat); }
+  header#appHeader { display: flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-3); height: 56px; background: var(--surface-app); border-bottom: 1px solid var(--color-divider); flex-shrink: 0; z-index: 10; }
+  #appTitle { flex: 1; font-size: var(--text-medium); font-weight: var(--fw-semibold); color: var(--color-foreground); margin: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: var(--tracking-tight); }
+  .search-bar { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--surface-app); border-bottom: 1px solid var(--color-divider); flex-shrink: 0; }
   .search-bar.hidden { display: none; }
-  .search-bar input {
-    flex: 1; font-size: 14px; padding: 8px 12px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--panel); color: var(--text); outline: none;
-  }
-  .search-bar input:focus { border-color: var(--accent); }
-  .search-bar .search-close {
-    background: none; border: none; color: var(--dim); font-size: 18px; cursor: pointer; padding: 4px;
-  }
-  .search-result-folder {
-    font-size: 11px; color: var(--dim); margin-left: 4px; font-weight: 400;
-  }
-
-  /* ── Tier 3 #9: Checklists ── */
-  .checklist-btn {
-    background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--dim);
-    padding: 6px 10px; font-size: 14px; cursor: pointer; transition: all 0.2s;
-  }
-  .checklist-btn.active { background: rgba(76, 211, 111, 0.15); color: var(--accent); border-color: var(--accent); }
-  .entry-checklist { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
-  .entry-checklist-item {
-    font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 4px;
-  }
-  .entry-checklist-item.done { text-decoration: line-through; opacity: 0.5; }
-
-  /* ── Tier 3 #10: Multi-select ── */
-  .select-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--panel); border-top: 2px solid var(--accent);
-    padding: 12px 16px max(14px, env(safe-area-inset-bottom));
-    z-index: 95; display: flex; align-items: center; gap: 8px;
-    transform: translateY(100%); transition: transform 0.25s ease;
-  }
-  .select-bar.open { transform: translateY(0); }
-  .select-count { font-size: 14px; font-weight: 600; flex: 1; }
-  .select-action {
-    padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
-    border: none; cursor: pointer;
-  }
-  .select-action.move { background: var(--accent); color: var(--panel); }
-  .select-action.delete { background: var(--danger); color: #fff; }
-  .select-action.cancel { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-  .entry.selected { border-color: var(--accent); background: rgba(76, 211, 111, 0.08); }
-  .entry .select-check {
-    width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border);
-    flex-shrink: 0; display: none; align-items: center; justify-content: center;
-    font-size: 12px; transition: all 0.15s;
-  }
-  .entry.selected .select-check { border-color: var(--accent); background: var(--accent); color: var(--panel); }
+  .search-bar input { flex: 1; font-size: var(--text-small); font-family: var(--font-sans); padding: 10px var(--space-3); border-radius: var(--radius-small); border: 1px solid var(--color-border); background: var(--surface-card); color: var(--color-foreground); outline: none; transition: border-color var(--dur-fast) var(--ease-out); }
+  .search-bar input:focus { border-color: var(--color-primary); }
+  section.list { margin-bottom: var(--space-6); border-radius: var(--radius-medium); transition: background var(--dur-fast) var(--ease-out); min-height: 44px; }
+  section.list.drag-over { background: var(--color-primary-flat); }
+  .list-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); padding: 0 var(--space-1); cursor: pointer; user-select: none; }
+  .list-title { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-tiny); font-weight: var(--fw-semibold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); flex: 1; }
+  .list-count { font-size: 11px; font-weight: var(--fw-medium); color: var(--text-muted); background: var(--color-default-flat); padding: 1px 8px; border-radius: var(--radius-full); }
+  .entries { display: flex; flex-direction: column; gap: var(--space-2); }
+  .entry { background: var(--surface-card); border: 1px solid var(--color-divider); border-radius: var(--radius-medium); padding: var(--space-3); display: flex; align-items: flex-start; gap: var(--space-2); cursor: grab; transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out); }
+  .entry:hover { border-color: var(--color-border); }
+  .entry:active { cursor: grabbing; }
+  .entry.selected { border-color: var(--color-primary); background: var(--color-primary-flat); }
+  .entry-content { flex: 1; overflow: hidden; min-width: 0; pointer-events: none; }
+  .entry-title { font-weight: var(--fw-semibold); font-size: var(--text-small); color: var(--color-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .entry-preview { font-size: var(--text-tiny); color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .entry .del { width: 24px; height: 24px; border-radius: var(--radius-small); border: none; background: transparent; color: transparent; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast); z-index: 2; }
+  .entry:hover .del { color: var(--text-muted); }
+  .entry .del:hover { color: var(--color-danger) !important; background: var(--color-danger-flat); }
+  .empty { color: var(--text-muted); font-size: var(--text-tiny); padding: var(--space-2) var(--space-1); }
+  .entry .select-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--color-border); flex-shrink: 0; display: none; align-items: center; justify-content: center; font-size: 11px; transition: all var(--dur-fast) var(--ease-out); }
+  .entry.selected .select-check { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-primary-foreground); }
   body.select-mode .entry .select-check { display: flex; }
   body.select-mode .entry { cursor: pointer; }
   body.select-mode .entry .del { display: none; }
-
-  /* ── Tier 3 #11: Export ── */
-  .export-actions { display: flex; flex-direction: column; gap: 10px; }
-  .export-btn {
-    padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600;
-    border: 1px solid var(--border); background: var(--bg); color: var(--text);
-    cursor: pointer; text-align: left; display: flex; align-items: center; gap: 10px;
-    transition: border-color 0.2s;
-  }
-  .export-btn:hover { border-color: var(--accent); }
-  .export-btn .export-icon { font-size: 20px; }
-  .export-btn .export-label { flex: 1; }
-  .export-btn .export-desc { font-size: 11px; color: var(--dim); font-weight: 400; }
-
-  /* ── Tier 3 #12: Embedded links ── */
-  .entry-preview a, .note-link {
-    color: var(--accent); text-decoration: underline;
-    text-decoration-color: rgba(76, 211, 111, 0.4);
-    pointer-events: auto;
-  }
-  .entry-preview a:hover, .note-link:hover { text-decoration-color: var(--accent); }
-    
-    .checklist-btn.active { opacity: 1; filter: grayscale(0); }
-    
-    @keyframes pulse {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
-    }
-    
-    .media-btn { background:none; border:none; color:var(--dim); font-size:18px; cursor:pointer; padding:4px; }
-
-  /* ── Recycle Bin ── */
-  .bin-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    padding: 12px; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--bg);
-    margin-bottom: 8px;
-  }
-  .bin-item-content { flex: 1; min-width: 0; }
-  .bin-item-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bin-item-meta { font-size: 11px; color: var(--dim); margin-top: 3px; }
-  .bin-item-days {
-    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px;
-    background: rgba(255, 107, 107, 0.15); color: var(--danger); flex-shrink: 0; align-self: center;
-  }
-  .bin-item-days.safe { background: rgba(76, 211, 111, 0.12); color: var(--accent); }
-  .bin-actions { display: flex; gap: 6px; margin-top: 8px; }
-  .bin-action-btn {
-    font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 8px; border: none; cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .bin-action-btn:active { opacity: 0.7; }
-  .bin-action-btn.restore { background: rgba(76,211,111,0.15); color: var(--accent); border: 1px solid var(--accent); }
-  .bin-action-btn.perm-del { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid var(--danger); }
-  .bin-empty-btn {
-    width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
-    border: none; background: rgba(255,107,107,0.15); color: var(--danger); cursor: pointer;
-    border: 1px solid rgba(255,107,107,0.4); margin-bottom: 14px; transition: background 0.2s;
-  }
-  .bin-empty-btn:active { background: rgba(255,107,107,0.3); }
-  .bin-badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--danger); color: #fff; border-radius: 50%;
-    font-size: 10px; font-weight: 700; width: 18px; height: 18px; margin-left: 6px;
-  }
-
-  /* ── Dict redesign ── */
-  .dict-edit-section {
-    padding: 12px 0 10px; border-bottom: 1px solid var(--border); display: none;
-  }
-  .dict-folder-btn {
-    width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer;
-    text-align: left; display: flex; align-items: center; gap: 8px; margin-top: 8px;
-    transition: border-color 0.2s;
-  }
-  .dict-folder-btn:hover { border-color: var(--accent); }
-  .dict-multi-bar {
-    display: none; align-items: center; gap: 6px; flex-wrap: wrap;
-    padding: 8px 0; border-bottom: 1px solid var(--border);
-  }
-  .dict-multi-bar.visible { display: flex; }
-  .dict-add-new-btn {
-    width: 100%; margin: 8px 0 4px; padding: 10px; border-radius: 8px;
-    border: 1px dashed var(--border); background: transparent;
-    color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-  }
-  .dict-add-new-btn:hover { border-color: var(--accent); background: rgba(76,211,111,0.05); }
-  .dict-row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px; border-radius: 10px; border: 1px solid transparent;
-    cursor: pointer; transition: background 0.15s, border-color 0.15s;
-    margin-bottom: 4px;
-  }
-  .dict-row:hover { background: rgba(255,255,255,0.04); }
-  .dict-row.selected { border-color: var(--accent); background: rgba(76,211,111,0.08); }
-  .dict-check {
-    width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; flex-shrink: 0; transition: all 0.15s; color: var(--panel);
-  }
-  .dict-row.selected .dict-check { background: var(--accent); border-color: var(--accent); }
-  .dict-kv { flex: 1; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .dict-folder-chip {
-    font-size: 11px; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--bg); color: var(--dim); cursor: pointer; flex-shrink: 0;
-    white-space: nowrap; transition: border-color 0.15s, color 0.15s;
-  }
-  .dict-folder-chip.scoped { border-color: var(--accent); color: var(--accent); background: rgba(76,211,111,0.08); }
-  .dict-del-btn {
-    background: none; border: none; color: var(--dim); font-size: 15px;
-    cursor: pointer; padding: 2px 4px; flex-shrink: 0; line-height: 1;
-  }
-  .dict-del-btn:active { color: var(--danger); }
-
-  /* ── Folder Access Modal ── */
-  .fa-row {
-    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-    border-radius: 8px; cursor: pointer; border: 1px solid transparent;
-    margin-bottom: 4px; transition: background 0.15s, border-color 0.15s;
-  }
-  .fa-row:hover { background: rgba(255,255,255,0.04); }
-  .fa-row.checked { border-color: var(--accent); background: rgba(76,211,111,0.08); }
-  .fa-check {
-    width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; flex-shrink: 0; transition: all 0.15s;
-  }
-  .fa-check.checked { background: var(--accent); border-color: var(--accent); color: var(--panel); }
-  .fa-check.inherited { background: rgba(76,211,111,0.3); border-color: var(--accent); color: var(--accent); }
-  .fa-allow-all-btn {
-    width: 100%; padding: 12px; border-radius: 8px;
-    border: 1px solid var(--accent); background: rgba(76,211,111,0.1);
-    color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer;
-    margin-bottom: 10px; transition: background 0.2s;
-  }
-  .fa-allow-all-btn:active { background: rgba(76,211,111,0.2); }
-  .fa-apply-btn {
-    width: 100%; padding: 12px; border-radius: 8px; border: none;
-    background: var(--accent); color: var(--panel); font-size: 14px;
-    font-weight: 700; cursor: pointer; margin-top: 10px;
-  }
-
-  /* ── Formatting Toolbar ── */
-  .format-toolbar {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 0 4px;
-    border-top: 1px solid var(--border);
-    margin-top: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  .overlay { position: fixed; inset: 0; background: var(--color-overlay); z-index: 99; opacity: 0; pointer-events: none; transition: opacity var(--dur-base) var(--ease-out); }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .sidebar { position: fixed; top: 0; left: -320px; width: 296px; height: 100%; background: var(--surface-sidebar); border-right: 1px solid var(--color-divider); transition: left var(--dur-slow) var(--ease-out); z-index: 100; display: flex; flex-direction: column; }
+  .sidebar.open { left: 0; }
+  .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-5) var(--space-4) var(--space-3); border-bottom: 1px solid var(--color-divider); }
+  .sidebar-header h2 { margin: 0; font-size: var(--text-medium); font-weight: var(--fw-bold); letter-spacing: var(--tracking-tight); }
+  .close-sidebar { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-small); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; transition: background var(--dur-fast); }
+  .close-sidebar:hover { background: var(--color-default-flat); color: var(--color-foreground); }
+  .sidebar-actions { padding: var(--space-3); border-bottom: 1px solid var(--color-divider); display: flex; gap: var(--space-2); }
+  .btn-sidebar { flex: 1; background: transparent; color: var(--text-muted); border: 1px solid var(--color-divider); padding: var(--space-2); border-radius: var(--radius-small); font-weight: var(--fw-medium); font-size: var(--text-tiny); font-family: var(--font-sans); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: var(--space-1); position: relative; transition: all var(--dur-fast); }
+  .btn-sidebar:hover { border-color: var(--color-border); color: var(--color-foreground); }
+  .sidebar-group { padding: 0; border-bottom: 1px solid var(--color-divider); }
+  .sidebar-group h3 { margin: 0; padding: var(--space-3) var(--space-4) var(--space-2); font-size: var(--text-tiny); font-weight: var(--fw-semibold); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .pinned-note-item, .recent-note-item { font-size: var(--text-small); color: var(--color-foreground); padding: var(--space-2) var(--space-4); border: none; background: transparent; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; transition: background var(--dur-fast); }
+  .pinned-note-item { border-left: 2px solid var(--color-primary); padding-left: 14px; }
+  .pinned-note-item:hover, .recent-note-item:hover { background: var(--color-default-flat); }
+  .recent-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); padding: 0 var(--space-4) var(--space-3); }
+  .recent-chip { background: transparent; border: 1px solid var(--color-divider); color: var(--text-muted); font-size: var(--text-tiny); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); cursor: pointer; font-family: var(--font-sans); transition: all var(--dur-fast); }
+  .recent-chip.active { background: var(--color-primary); color: var(--color-primary-foreground); border-color: var(--color-primary); font-weight: var(--fw-semibold); }
+  .recent-chip:hover:not(.active) { border-color: var(--color-border); color: var(--color-foreground); }
+  .folder-tree-container { flex: 1; overflow-y: auto; padding: var(--space-2); }
+  .folder-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-3); margin: 1px 0; border-radius: var(--radius-small); cursor: pointer; font-size: var(--text-small); color: var(--text-muted); border: 1px solid transparent; transition: background var(--dur-fast), color var(--dur-fast); }
+  .folder-item:hover { background: var(--color-default-flat); color: var(--color-foreground); }
+  .folder-item.active { background: var(--color-primary-flat); color: var(--color-primary); font-weight: var(--fw-semibold); }
+  .folder-indent-1 { margin-left: 14px; }
+  .folder-indent-2 { margin-left: 28px; }
+  .f-del, .f-settings { display: none; color: var(--text-muted); font-size: 13px; }
+  .folder-item:hover .f-del, .folder-item:hover .f-settings { display: block; }
+  .f-del:hover { color: var(--color-danger); }
+  .add-folder-box { padding: var(--space-3); border-top: 1px solid var(--color-divider); display: flex; flex-direction: column; gap: var(--space-2); }
+  .add-folder-box input, .add-folder-box select { width: 100%; font-size: var(--text-small); font-family: var(--font-sans); padding: var(--space-2) var(--space-3); border-radius: var(--radius-small); border: 1px solid var(--color-border); background: var(--surface-card); color: var(--color-foreground); outline: none; }
+  .add-folder-box input:focus, .add-folder-box select:focus { border-color: var(--color-primary); }
+  .add-folder-box button { width: 100%; font-size: var(--text-small); font-family: var(--font-sans); padding: 10px; border-radius: var(--radius-small); border: none; background: var(--color-primary); color: var(--color-primary-foreground); font-weight: var(--fw-semibold); cursor: pointer; }
+  .editor-meta { padding: var(--space-2) var(--space-4); border-bottom: 1px solid var(--color-divider); background: var(--surface-sidebar); flex-shrink: 0; }
+  .editor-meta-inner { max-width: 760px; margin: 0 auto; width: 100%; display: flex; align-items: center; gap: var(--space-3); min-height: 34px; }
+  .editor-context { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+  .editor-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+  .editor-action-divider { width: 1px; height: 18px; background: var(--color-divider); margin: 0 var(--space-1); }
+  .folder-badge { padding: var(--space-1) var(--space-3); border-radius: var(--radius-small); font-weight: var(--fw-medium); font-size: var(--text-tiny); font-family: var(--font-sans); cursor: pointer; border: 1px solid var(--color-border); background: transparent; color: var(--text-muted); transition: border-color var(--dur-fast); }
+  .folder-badge:hover { border-color: var(--color-primary); }
+  .tag-badge { padding: 3px var(--space-2); border-radius: 6px; font-weight: var(--fw-semibold); font-size: 11px; font-family: var(--font-sans); cursor: pointer; border: 1px solid rgba(76,211,111,0.3); background: var(--color-primary-flat); color: var(--color-primary); letter-spacing: 0.03em; text-transform: uppercase; }
+  .checklist-btn, .pin-btn { background: none; border: 1px solid var(--color-divider); border-radius: 7px; color: var(--text-muted); padding: var(--space-1) var(--space-2); font-family: var(--font-sans); cursor: pointer; transition: all var(--dur-fast); display: flex; align-items: center; justify-content: center; }
+  .pin-btn { margin-left: 0; }
+  .checklist-btn.active, .pin-btn.is-pinned { background: var(--color-primary-flat); color: var(--color-primary); border-color: rgba(76,211,111,0.35); }
+  .media-btn { background: none; border: none; color: var(--text-subtle); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 7px; cursor: pointer; transition: color var(--dur-fast), background var(--dur-fast); flex-shrink: 0; }
+  .media-btn:hover { color: var(--text-muted); background: var(--color-default-flat); }
+  #noteContent { flex: 1; width: 100%; max-width: 768px; margin: 0 auto; resize: none; background: var(--surface-app); color: var(--color-foreground); border: none; padding: var(--space-6) var(--space-5); font-size: var(--text-medium); line-height: 1.7; outline: none; font-family: var(--font-sans); }
+  .editor-audio { width: 100%; max-width: 768px; margin: 0 auto; padding: var(--space-4) var(--space-5) 0; background: transparent; }
+  #noteContent::placeholder { color: var(--text-muted); }
+  #bottom-dock { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-app); border-top: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom)); z-index: 90; transition: bottom 0.1s ease-out; }
+  .dock-controls { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  #bottom-dock.editor-mode .dock-controls { margin-bottom: 0; }
+  #bottom-dock.editor-mode .input-row { display: none; }
+  .view-toggle-inner { background: var(--surface-card); border: 1px solid var(--color-divider); border-radius: var(--radius-full); display: flex; padding: 3px; gap: 2px; flex: 1; }
+  .view-toggle-btn { flex: 1; padding: var(--space-2) var(--space-3); border-radius: var(--radius-full); font-size: var(--text-small); font-weight: var(--fw-medium); font-family: var(--font-sans); color: var(--text-muted); background: transparent; border: none; cursor: pointer; transition: all var(--dur-base) var(--ease-out); white-space: nowrap; }
+  .view-toggle-btn.active { background: var(--surface-raised); color: var(--color-foreground); font-weight: var(--fw-semibold); box-shadow: var(--shadow-small); }
+  .dock-dict-btn { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: var(--radius-medium); border: 1px solid var(--color-divider); background: transparent; color: var(--text-muted); cursor: pointer; transition: border-color var(--dur-fast), color var(--dur-fast); flex-shrink: 0; }
+  .dock-dict-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .input-row { display: flex; align-items: center; background: var(--surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-medium); padding: 3px 3px 3px var(--space-3); transition: border-color var(--dur-base) var(--ease-out); }
+  .input-row:focus-within { border-color: var(--color-primary); }
+  #rapidEntry { flex: 1; font-size: var(--text-medium); font-family: var(--font-sans); padding: var(--space-2) var(--space-1); border: none; background: transparent; color: var(--color-foreground); outline: none; }
+  #rapidEntry::placeholder { color: var(--text-muted); }
+  #rapidAddBtn { font-size: var(--text-small); font-weight: var(--fw-semibold); font-family: var(--font-sans); padding: var(--space-2) var(--space-4); border-radius: var(--radius-small); border: none; background: var(--color-primary); color: var(--color-primary-foreground); cursor: pointer; flex-shrink: 0; transition: opacity var(--dur-fast); }
+  #rapidAddBtn:active { opacity: 0.8; }
+  .format-toolbar { display: none; align-items: center; gap: var(--space-1); padding: var(--space-2) 0 var(--space-1); border-top: 1px solid var(--color-divider); margin-top: var(--space-2); overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #bottom-dock.editor-mode .format-toolbar { display: flex; }
-  .format-btn {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 6px 15px;
-    font-size: 15px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-    line-height: 1.4;
-  }
-  .format-btn:active { background: var(--accent); color: var(--panel); border-color: var(--accent); }
-  #fmtBold   { font-weight: 800; }
-  #fmtItalic { font-style: italic; }
-  #fmtUnder  { text-decoration: underline; }
-  #fmtStrike { text-decoration: line-through; }
-  </style>
+  .format-btn { background: var(--surface-card); border: 1px solid var(--color-divider); color: var(--color-foreground); border-radius: 7px; padding: var(--space-1) 14px; font-size: 14px; font-family: var(--font-sans); cursor: pointer; flex-shrink: 0; transition: background var(--dur-fast); }
+  .format-btn:active { background: var(--color-primary-flat); border-color: rgba(76,211,111,0.4); color: var(--color-primary); }
+  #fmtBold { font-weight: 700; } #fmtItalic { font-style: italic; } #fmtUnder { text-decoration: underline; } #fmtStrike { text-decoration: line-through; }
+  .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.96); background: var(--surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-large); width: 90%; max-width: 400px; padding: var(--space-5); z-index: 102; opacity: 0; pointer-events: none; transition: all var(--dur-base) var(--ease-out); display: flex; flex-direction: column; max-height: 80vh; box-shadow: var(--shadow-large); }
+  .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+  .modal-header h2 { margin: 0; font-size: var(--text-medium); font-weight: var(--fw-bold); letter-spacing: var(--tracking-tight); }
+  .modal-body { overflow-y: auto; flex: 1; }
+  .modal-row { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .modal-row input { flex: 1; font-size: var(--text-small); font-family: var(--font-sans); padding: 10px var(--space-3); border-radius: var(--radius-small); border: 1px solid var(--color-border); background: var(--surface-app); color: var(--color-foreground); min-width: 0; outline: none; transition: border-color var(--dur-fast); }
+  .modal-row input:focus { border-color: var(--color-primary); }
+  .modal-row button { font-size: var(--text-small); font-family: var(--font-sans); padding: 0 var(--space-4); border-radius: var(--radius-small); border: none; background: var(--color-primary); color: var(--color-primary-foreground); font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap; }
+  .list-item { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-small); color: var(--text-muted); padding: 10px var(--space-2); border-bottom: 1px solid var(--color-divider); cursor: pointer; border-radius: 6px; transition: background var(--dur-fast); }
+  .list-item:hover { background: var(--color-default-flat); color: var(--color-foreground); }
+  .list-item b { color: var(--color-foreground); }
+  .list-item .del { color: var(--text-muted); padding: 0 6px; font-size: 14px; }
+  .list-item .del:hover { color: var(--color-danger); }
+  .select-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-card); border-top: 2px solid var(--color-primary); padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom)); z-index: 95; display: flex; align-items: center; gap: var(--space-2); transform: translateY(100%); transition: transform var(--dur-base) var(--ease-out); }
+  .select-bar.open { transform: translateY(0); }
+  .select-count { font-size: var(--text-small); font-weight: var(--fw-semibold); flex: 1; }
+  .select-action { padding: var(--space-2) 14px; border-radius: var(--radius-small); font-size: var(--text-small); font-weight: var(--fw-semibold); font-family: var(--font-sans); border: none; cursor: pointer; }
+  .select-action.move { background: var(--color-primary); color: var(--color-primary-foreground); }
+  .select-action.delete { background: var(--color-danger-flat); color: var(--color-danger); border: 1px solid rgba(243,18,96,0.3); }
+  .select-action.cancel { background: var(--color-default-flat); color: var(--color-foreground); }
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-16px); background: var(--surface-raised); border: 1px solid var(--color-border); color: var(--color-foreground); padding: 10px var(--space-4); border-radius: var(--radius-full); font-size: var(--text-small); opacity: 0; transition: all var(--dur-base) var(--ease-out); pointer-events: none; z-index: 200; box-shadow: var(--shadow-medium); white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .bin-item { display: flex; align-items: flex-start; gap: 10px; padding: var(--space-3); border-radius: var(--radius-medium); border: 1px solid var(--color-divider); background: var(--surface-app); margin-bottom: var(--space-2); }
+  .bin-item-content { flex: 1; min-width: 0; }
+  .bin-item-title { font-size: var(--text-small); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bin-item-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .bin-item-days { font-size: 11px; font-weight: var(--fw-bold); padding: 2px var(--space-2); border-radius: var(--radius-small); background: var(--color-danger-flat); color: var(--color-danger); flex-shrink: 0; align-self: center; }
+  .bin-item-days.safe { background: var(--color-primary-flat); color: var(--color-primary); }
+  .bin-actions { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+  .bin-action-btn { font-size: var(--text-tiny); font-weight: var(--fw-semibold); padding: var(--space-1) var(--space-3); border-radius: var(--radius-small); font-family: var(--font-sans); border: none; cursor: pointer; }
+  .bin-action-btn:active { opacity: 0.7; }
+  .bin-action-btn.restore { background: var(--color-primary-flat); color: var(--color-primary); border: 1px solid rgba(76,211,111,0.3); }
+  .bin-action-btn.perm-del { background: var(--color-danger-flat); color: var(--color-danger); border: 1px solid rgba(243,18,96,0.3); }
+  .bin-empty-btn { width: 100%; padding: 11px; border-radius: var(--radius-medium); font-size: var(--text-small); font-weight: var(--fw-bold); border: 1px solid rgba(243,18,96,0.3); font-family: var(--font-sans); background: var(--color-danger-flat); color: var(--color-danger); cursor: pointer; margin-bottom: var(--space-3); }
+  .bin-badge { display: inline-flex; align-items: center; justify-content: center; background: var(--color-danger); color: #fff; border-radius: 50%; font-size: 10px; font-weight: var(--fw-bold); width: 16px; height: 16px; margin-left: 6px; vertical-align: middle; }
+  .dict-edit-section { padding: var(--space-3) 0 var(--space-2); border-bottom: 1px solid var(--color-divider); display: none; }
+  .dict-folder-btn { width: 100%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-small); border: 1px solid var(--color-border); background: var(--surface-app); color: var(--color-foreground); font-size: var(--text-small); font-family: var(--font-sans); cursor: pointer; text-align: left; display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); transition: border-color var(--dur-fast); }
+  .dict-folder-btn:hover { border-color: var(--color-primary); }
+  .dict-multi-bar { display: none; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding: var(--space-2) 0; border-bottom: 1px solid var(--color-divider); }
+  .dict-multi-bar.visible { display: flex; }
+  .dict-add-new-btn { width: 100%; margin: var(--space-2) 0 var(--space-1); padding: 10px; border-radius: var(--radius-small); border: 1px dashed var(--color-border); background: transparent; color: var(--color-primary); font-size: var(--text-small); font-weight: var(--fw-semibold); font-family: var(--font-sans); cursor: pointer; transition: border-color var(--dur-fast), background var(--dur-fast); }
+  .dict-add-new-btn:hover { border-color: var(--color-primary); background: var(--color-primary-flat); }
+  .dict-row { display: flex; align-items: center; gap: var(--space-2); padding: 10px var(--space-2); border-radius: var(--radius-small); border: 1px solid transparent; cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast); margin-bottom: 3px; }
+  .dict-row:hover { background: var(--color-default-flat); }
+  .dict-row.selected { border-color: rgba(76,211,111,0.3); background: var(--color-primary-flat); }
+  .dict-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all var(--dur-fast); color: transparent; }
+  .dict-row.selected .dict-check { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-foreground); }
+  .dict-kv { flex: 1; font-size: var(--text-small); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dict-folder-chip { font-size: 11px; padding: 2px 7px; border-radius: var(--radius-small); border: 1px solid var(--color-divider); background: transparent; color: var(--text-muted); cursor: pointer; flex-shrink: 0; white-space: nowrap; font-family: var(--font-sans); transition: border-color var(--dur-fast), color var(--dur-fast); }
+  .dict-folder-chip.scoped { border-color: rgba(76,211,111,0.4); color: var(--color-primary); background: var(--color-primary-flat); }
+  .dict-del-btn { background: none; border: none; color: var(--text-muted); font-size: 14px; cursor: pointer; padding: 2px 4px; flex-shrink: 0; transition: color var(--dur-fast); }
+  .dict-del-btn:active { color: var(--color-danger); }
+  .fa-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-small); cursor: pointer; border: 1px solid transparent; margin-bottom: 3px; transition: background var(--dur-fast), border-color var(--dur-fast); }
+  .fa-row:hover { background: var(--color-default-flat); }
+  .fa-row.checked { border-color: rgba(76,211,111,0.3); background: var(--color-primary-flat); }
+  .fa-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: all var(--dur-fast); }
+  .fa-check.checked { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-foreground); }
+  .fa-check.inherited { background: var(--color-primary-flat); border-color: var(--color-primary); color: var(--color-primary); }
+  .fa-allow-all-btn { width: 100%; padding: 10px; border-radius: var(--radius-small); border: 1px solid rgba(76,211,111,0.4); background: var(--color-primary-flat); color: var(--color-primary); font-size: var(--text-small); font-family: var(--font-sans); font-weight: var(--fw-semibold); cursor: pointer; margin-bottom: 10px; }
+  .fa-apply-btn { width: 100%; padding: var(--space-3); border-radius: var(--radius-small); border: none; background: var(--color-primary); color: var(--color-primary-foreground); font-size: var(--text-small); font-family: var(--font-sans); font-weight: var(--fw-bold); cursor: pointer; margin-top: 10px; }
+  .entry-checklist { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+  .entry-checklist-item { font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .entry-checklist-item.done { text-decoration: line-through; opacity: 0.45; }
+  .entry-preview a, .note-link { color: var(--color-primary); text-decoration: underline; text-decoration-color: rgba(76,211,111,0.35); pointer-events: auto; }
+  .search-result-folder { font-size: 11px; color: var(--text-muted); margin-left: 4px; font-weight: 400; }
+  .export-actions { display: flex; flex-direction: column; gap: var(--space-2); }
+  .export-btn { padding: 13px 14px; border-radius: var(--radius-medium); font-size: var(--text-small); font-weight: var(--fw-semibold); border: 1px solid var(--color-border); background: var(--surface-app); color: var(--color-foreground); cursor: pointer; text-align: left; display: flex; align-items: center; gap: var(--space-3); transition: border-color var(--dur-fast); font-family: var(--font-sans); }
+  .export-btn:hover { border-color: var(--color-primary); }
+  .export-icon { font-size: 20px; }
+  .export-label { flex: 1; }
+  .export-desc { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+  @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(243,18,96,0.6); } 70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(243,18,96,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(243,18,96,0); } }
+</style>
 </head>
 <body>
 
@@ -501,154 +218,193 @@
 
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <h2>Menu</h2>
+    <h2>Folders</h2>
     <button class="close-sidebar" id="closeSidebarBtn">✕</button>
   </div>
-  
   <div class="sidebar-actions">
-    <button class="btn-sidebar" id="menuCatsBtn"><span class="iconify" data-icon="vuesax-linear:category"></span> Categories</button>
-    <button class="btn-sidebar" id="menuBinBtn" style="position:relative;"><span class="iconify" data-icon="vuesax-linear:trash"></span> Bin<span class="bin-badge" id="binBadge" style="display:none;"></span></button>
+    <button class="btn-sidebar" id="menuCatsBtn">Categories</button>
+    <button class="btn-sidebar" id="menuBinBtn" style="position:relative;">Bin<span class="bin-badge" id="binBadge" style="display:none;"></span></button>
   </div>
-
-  <div class="pinned-notes-box" id="pinnedNotesBox" style="display: none;">
-    <h3><span class="iconify" data-icon="vuesax-linear:pin" style="vertical-align:-2px;"></span> Pinned</h3>
-    <div id="pinnedNotesList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+  <div class="sidebar-group" id="pinnedNotesBox" style="display:none;">
+    <h3>Pinned</h3>
+    <div id="pinnedNotesList" style="display:flex;flex-direction:column;gap:3px;padding-bottom:10px;"></div>
   </div>
-
-  <div class="recent-folders-box" id="recentNotesBox" style="display: none;">
-    <h3>Recent Notes</h3>
-    <div id="recentNotesList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+  <div class="sidebar-group" id="recentNotesBox" style="display:none;">
+    <h3>Recent notes</h3>
+    <div id="recentNotesList" style="display:flex;flex-direction:column;gap:3px;padding-bottom:10px;"></div>
   </div>
-
-  <div class="recent-folders-box" id="recentFoldersBox" style="display: none;">
-    <h3>Recent Folders</h3>
+  <div class="sidebar-group" id="recentFoldersBox" style="display:none;">
+    <h3>Recent folders</h3>
     <div class="recent-chips" id="recentChips"></div>
   </div>
-
   <div class="folder-tree-container" id="folderTree"></div>
-  
   <div class="add-folder-box">
     <input type="text" id="newFolderInput" placeholder="New folder name..." autocomplete="off">
     <select id="newFolderParent"></select>
-    <button id="addFolderBtn">Add Folder</button>
+    <button id="addFolderBtn">Add folder</button>
   </div>
 </div>
 
 <div class="modal" id="dictModal" style="max-height:88vh;">
   <div class="modal-header">
-    <h2><span class="iconify" data-icon="vuesax-linear:book" style="vertical-align:-3px;"></span> Shorthand Dictionary</h2>
+    <h2>Shorthand dictionary</h2>
     <button class="close-sidebar" id="closeDictBtn">✕</button>
   </div>
-
-  <!-- Edit / Add form -->
   <div class="dict-edit-section" id="dictEditSection">
     <div class="modal-row" style="margin-bottom:0;">
       <input id="dictKey" type="text" placeholder="key (e.g. mtg)" autocomplete="off" autocapitalize="off">
-      <input id="dictVal" type="text" placeholder="text (e.g. meeting)" autocomplete="off" autocapitalize="off">
+      <input id="dictVal" type="text" placeholder="expansion (e.g. meeting)" autocomplete="off" autocapitalize="off">
       <button id="dictAdd">Save</button>
     </div>
     <button class="dict-folder-btn" id="dictFolderAccessBtn">
-      <span style="display:flex;align-items:center;font-size:16px;"><span class="iconify" data-icon="vuesax-linear:folder-open"></span></span><span id="dictFolderAccessLabel">Allowed in: All Folders</span>
+      <iconify-icon icon="solar:folder-linear" width="16"></iconify-icon><span id="dictFolderAccessLabel">Allowed in: All folders</span>
     </button>
   </div>
-
-  <!-- Multi-select toolbar -->
   <div class="dict-multi-bar" id="dictMultiBar">
-    <span id="dictMultiCount" style="font-size:13px;font-weight:600;flex:1;">0 selected</span>
-    <button class="bin-action-btn restore" id="dictMultiFoldersBtn" style="display:flex;align-items:center;gap:4px;"><span class="iconify" data-icon="vuesax-linear:folder-open"></span> Folders</button>
-    <button class="bin-action-btn perm-del" id="dictMultiDeleteBtn" style="display:flex;align-items:center;gap:4px;"><span class="iconify" data-icon="vuesax-linear:trash"></span> Delete</button>
+    <span id="dictMultiCount" style="font-size:var(--text-small);font-weight:600;flex:1;">0 selected</span>
+    <button class="bin-action-btn restore" id="dictMultiFoldersBtn">Folders</button>
+    <button class="bin-action-btn perm-del" id="dictMultiDeleteBtn">Delete</button>
     <button class="select-action cancel" id="dictMultiCancelBtn" style="padding:5px 10px;font-size:12px;">✕</button>
   </div>
-
-  <button class="dict-add-new-btn" id="dictAddNewBtn">+ Add Shorthand</button>
+  <button class="dict-add-new-btn" id="dictAddNewBtn">+ Add shorthand</button>
   <div class="modal-body" id="dictList" style="display:flex;flex-direction:column;"></div>
 </div>
 
 <div class="modal" id="catModal">
   <div class="modal-header">
-    <h2><span class="iconify" data-icon="vuesax-linear:category" style="vertical-align:-3px;"></span> Categories</h2>
+    <h2>Categories</h2>
     <button class="close-sidebar" id="closeCatBtn">✕</button>
   </div>
   <div class="modal-row">
     <input id="catName" type="text" placeholder="Name (e.g. Ideas)" autocomplete="off">
-    <input id="catPrefix" type="text" placeholder="Prefix (e.g. *)" autocomplete="off" style="max-width: 80px;">
+    <input id="catPrefix" type="text" placeholder="Prefix" autocomplete="off" style="max-width:80px;">
     <button id="catAdd">Save</button>
   </div>
-  <div class="modal-body" id="catList" style="display: flex; flex-direction: column; gap:4px;"></div>
+  <div class="modal-body" id="catList" style="display:flex;flex-direction:column;gap:3px;"></div>
 </div>
 
 <div class="modal" id="selectCatModal">
   <div class="modal-header">
-    <h2>Manage Tags</h2>
+    <h2>Manage tags</h2>
     <button class="close-sidebar" id="closeSelectCatBtn">✕</button>
   </div>
-  <div class="modal-body" id="selectCatList" style="display: flex; flex-direction: column; gap:4px;"></div>
+  <div class="modal-body" id="selectCatList" style="display:flex;flex-direction:column;gap:4px;"></div>
 </div>
 
 <div class="modal" id="selectFolderModal">
   <div class="modal-header">
-    <h2>Move to Folder</h2>
+    <h2>Move to folder</h2>
     <button class="close-sidebar" id="closeSelectFolderBtn">✕</button>
   </div>
-  <div class="modal-body" id="selectFolderList" style="display: flex; flex-direction: column; gap:4px;"></div>
+  <div class="modal-body" id="selectFolderList" style="display:flex;flex-direction:column;gap:4px;"></div>
 </div>
 
 <div class="modal" id="folderSettingsModal">
   <div class="modal-header">
-    <h2 id="folderSettingsTitle">Folder Settings</h2>
+    <h2 id="folderSettingsTitle">Folder settings</h2>
     <button class="close-sidebar" id="closeFolderSettingsBtn">✕</button>
   </div>
-  <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
-    <label style="display:flex;align-items:center;gap:8px;font-weight:bold;cursor:pointer;">
-      <input type="checkbox" id="folderShorthandToggle"> Enable Shorthand Expansion
+  <div class="modal-body" style="display:flex;flex-direction:column;gap:var(--space-3);">
+    <label style="display:flex;align-items:center;gap:10px;font-weight:500;cursor:pointer;font-size:var(--text-small);">
+      <input type="checkbox" id="folderShorthandToggle"> Enable shorthand expansion
     </label>
-    <p style="font-size:12px;color:var(--dim);margin:0;">To manage which shorthands are available in this folder, open the 📖 Dictionary from the bottom dock and use the 📂 folder access button on each shorthand.</p>
+    <p style="font-size:var(--text-tiny);color:var(--text-muted);margin:0;line-height:1.5;">Open the dictionary to manage which shorthands are available in this folder.</p>
   </div>
 </div>
 
-<!-- Folder Access Modal (for shorthand dict) -->
 <div class="modal" id="folderAccessModal" style="max-height:88vh;">
   <div class="modal-header">
-    <h2><span class="iconify" data-icon="vuesax-linear:folder-open" style="vertical-align:-3px;"></span> Folder Access</h2>
+    <h2>Folder access</h2>
     <button class="close-sidebar" id="closeFolderAccessBtn">✕</button>
   </div>
-  <p style="font-size:12px;color:var(--dim);margin:0 0 10px;">Choose which folders this shorthand works in. Sub-folders inherit from their parent.</p>
+  <p style="font-size:var(--text-tiny);color:var(--text-muted);margin:0 0 10px;line-height:1.5;">Choose which folders this shorthand works in. Sub-folders inherit from their parent.</p>
   <div class="modal-body" id="folderAccessList" style="display:flex;flex-direction:column;"></div>
 </div>
 
-<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;" />
-<div id="recordingOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:2000; align-items:center; justify-content:center; flex-direction:column; color:#fff;">
-    <div class="pulse" style="width:24px;height:24px;background:#ff3b30;border-radius:50%;margin-bottom:16px;"></div>
-    <div id="recordTime" style="font-size:32px;font-weight:bold;margin-bottom:32px;font-variant-numeric: tabular-nums;">00:00</div>
-    <button id="stopRecordBtn" style="background:#fff;color:#000;border:none;padding:12px 32px;border-radius:24px;font-size:16px;font-weight:bold;cursor:pointer;">Stop Recording</button>
+<div class="modal" id="exportModal">
+  <div class="modal-header">
+    <h2>Export folder</h2>
+    <button class="close-sidebar" id="closeExportBtn">✕</button>
+  </div>
+  <div class="modal-body">
+    <p style="font-size:var(--text-small);color:var(--text-muted);margin:0 0 14px;">Export all notes in <b id="exportFolderName" style="color:var(--color-foreground);">Home</b></p>
+    <div class="export-actions">
+      <button class="export-btn" id="exportTxtBtn"><iconify-icon class="export-icon" icon="solar:document-text-linear"></iconify-icon><div class="export-label">Export as TXT<br><span class="export-desc">Plain text, one note per section</span></div></button>
+      <button class="export-btn" id="exportPdfBtn"><iconify-icon class="export-icon" icon="solar:file-download-linear"></iconify-icon><div class="export-label">Export as PDF<br><span class="export-desc">Formatted, printable document</span></div></button>
+    </div>
+  </div>
 </div>
 
-<header>
-  <div class="header-top">
-    <button id="menuBtn">☰</button>
-    <h1 id="appTitle">Jigsaw Notes</h1>
-    <button id="searchToggleBtn" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:4px;display:flex;align-items:center;" title="Search"><span class="iconify" data-icon="vuesax-linear:search-normal"></span></button>
-    <button id="exportBtn" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:4px;display:flex;align-items:center;" title="Export Folder"><span class="iconify" data-icon="vuesax-linear:export"></span></button>
+<div class="modal" id="bulkMoveModal">
+  <div class="modal-header">
+    <h2>Move to folder</h2>
+    <button class="close-sidebar" id="closeBulkMoveBtn">✕</button>
   </div>
+  <div class="modal-body" id="bulkMoveFolderList" style="display:flex;flex-direction:column;gap:4px;"></div>
+</div>
+
+<div class="modal" id="binModal" style="max-height:85vh;">
+  <div class="modal-header">
+    <h2>Recycle bin</h2>
+    <button class="close-sidebar" id="closeBinBtn">✕</button>
+  </div>
+  <div class="modal-body" id="binModalBody" style="display:flex;flex-direction:column;"></div>
+</div>
+
+<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
+
+<div id="recordingOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:2000;align-items:center;justify-content:center;flex-direction:column;color:#fff;">
+  <div style="width:20px;height:20px;background:var(--color-danger);border-radius:50%;margin-bottom:20px;animation:pulse 1.5s infinite;"></div>
+  <div id="recordTime" style="font-size:38px;font-weight:700;margin-bottom:32px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;">00:00</div>
+  <button id="stopRecordBtn" style="background:#fff;color:#000;border:none;padding:12px 32px;border-radius:24px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-sans);">Stop recording</button>
+</div>
+
+<header id="appHeader">
+  <button class="icon-btn" id="menuBtn" aria-label="Menu" style="margin-left:-2px;">
+    <iconify-icon icon="solar:hamburger-menu-linear" width="22"></iconify-icon>
+  </button>
+  <h1 id="appTitle">Jigsaw Notes</h1>
+  <button class="icon-btn" id="searchToggleBtn" aria-label="Search">
+    <iconify-icon icon="solar:magnifer-linear" width="20"></iconify-icon>
+  </button>
+  <button class="icon-btn" id="exportBtn" aria-label="Export">
+    <iconify-icon icon="solar:upload-minimalistic-linear" width="20"></iconify-icon>
+  </button>
 </header>
+
 <div class="search-bar hidden" id="searchBar">
-  <input type="text" id="searchInput" placeholder="Search all notes..." autocomplete="off" />
-  <button class="search-close" id="searchClose">✕</button>
+  <input type="text" id="searchInput" placeholder="Search all notes..." autocomplete="off">
+  <button class="icon-btn" id="searchClose" aria-label="Close search">
+    <iconify-icon icon="solar:close-circle-linear" width="18"></iconify-icon>
+  </button>
 </div>
 
 <div class="view hidden" id="view-editor">
   <div class="editor-meta">
-    <span class="folder-badge" id="editorFolderBadge">Home</span>
-    <div id="editorTagsContainer" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"></div>
-    <div style="margin-left:auto; display:flex; gap:8px;">
-      <button class="media-btn" id="editorMicBtn" title="Record Audio" style="display:flex;align-items:center;justify-content:center;"><span class="iconify" data-icon="vuesax-linear:microphone-2"></span></button>
-      <button class="media-btn" id="editorPhotoBtn" title="Add Photo" style="display:flex;align-items:center;justify-content:center;"><span class="iconify" data-icon="vuesax-linear:camera"></span></button>
-      <button class="checklist-btn" id="checklistBtn" title="Toggle Checklist" style="display:flex;align-items:center;justify-content:center;"><span class="iconify" data-icon="vuesax-linear:task-square"></span></button>
-      <button class="pin-btn" id="editorPinBtn" title="Pin Note" style="display:flex;align-items:center;justify-content:center;"><span class="iconify" data-icon="vuesax-linear:pin"></span></button>
+    <div class="editor-meta-inner">
+      <div class="editor-context">
+        <span class="folder-badge" id="editorFolderBadge">Home</span>
+        <div id="editorTagsContainer" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;"></div>
+      </div>
+      <div class="editor-actions">
+        <button class="media-btn" id="editorMicBtn" title="Record audio">
+          <iconify-icon icon="solar:microphone-3-linear" width="17"></iconify-icon>
+        </button>
+        <button class="media-btn" id="editorPhotoBtn" title="Add photo">
+          <iconify-icon icon="solar:camera-linear" width="17"></iconify-icon>
+        </button>
+        <button class="checklist-btn" id="checklistBtn" title="Toggle checklist">
+          <iconify-icon icon="solar:checklist-minimalistic-linear" width="15"></iconify-icon>
+        </button>
+        <span class="editor-action-divider"></span>
+        <button class="pin-btn" id="editorPinBtn" title="Pin note">
+          <iconify-icon icon="solar:pin-linear" width="14"></iconify-icon>
+        </button>
+      </div>
     </div>
   </div>
-  <div id="editorAudioContainer" style="display:none; padding:12px 20px; background:var(--surface); border-bottom:1px solid var(--border);"></div>
-  <textarea id="noteContent" placeholder="Type here..."></textarea>
+  <div id="editorAudioContainer" class="editor-audio" style="display:none;"></div>
+  <textarea id="noteContent" placeholder="Start writing..."></textarea>
 </div>
 
 <div class="view" id="view-rapid">
@@ -663,70 +419,33 @@
       <button class="view-toggle-btn active" id="toggleRapidBtn">Rapid</button>
       <button class="view-toggle-btn" id="toggleNoteBtn">Note</button>
     </div>
-    <button class="dock-dict-btn" id="dictFab" style="display:flex;align-items:center;justify-content:center;"><span class="iconify" data-icon="vuesax-linear:book"></span></button>
+    <button class="dock-dict-btn" id="dictFab" title="Shorthand dictionary">
+      <iconify-icon icon="solar:notebook-linear" width="18"></iconify-icon>
+    </button>
   </div>
-  <!-- Formatting toolbar: only visible in editor mode -->
   <div class="format-toolbar" id="formatToolbar">
-    <button class="format-btn" id="fmtBold"   title="Bold">B</button>
+    <button class="format-btn" id="fmtBold" title="Bold">B</button>
     <button class="format-btn" id="fmtItalic" title="Italic">I</button>
-    <button class="format-btn" id="fmtUnder"  title="Underline">U</button>
+    <button class="format-btn" id="fmtUnder" title="Underline">U</button>
     <button class="format-btn" id="fmtStrike" title="Strikethrough">S</button>
   </div>
   <div class="input-row">
-    <button class="media-btn" id="dockMicBtn" style="padding:0 8px;font-size:22px;display:flex;align-items:center;"><span class="iconify" data-icon="vuesax-linear:microphone-2"></span></button>
-    <button class="media-btn" id="dockPhotoBtn" style="padding:0 8px 0 0;font-size:22px;margin-right:4px;display:flex;align-items:center;"><span class="iconify" data-icon="vuesax-linear:camera"></span></button>
-    <input id="rapidEntry" type="text" placeholder="Prefix sorts automatically..." autocomplete="off" autocapitalize="off" />
+    <button class="media-btn" id="dockMicBtn" style="width:30px;height:30px;">
+      <iconify-icon icon="solar:microphone-3-linear" width="16"></iconify-icon>
+    </button>
+    <button class="media-btn" id="dockPhotoBtn" style="width:30px;height:30px;margin-right:2px;">
+      <iconify-icon icon="solar:camera-linear" width="16"></iconify-icon>
+    </button>
+    <input id="rapidEntry" type="text" placeholder="Type to log a note..." autocomplete="off" autocapitalize="off">
     <button id="rapidAddBtn">Log</button>
   </div>
 </div>
 
-<!-- Tier 3 #10: Multi-select action bar -->
 <div class="select-bar" id="selectBar">
   <span class="select-count" id="selectCount">0 selected</span>
   <button class="select-action move" id="selectMoveBtn">Move</button>
   <button class="select-action delete" id="selectDeleteBtn">Delete</button>
   <button class="select-action cancel" id="selectCancelBtn">Cancel</button>
-</div>
-
-<!-- Tier 3 #11: Export modal -->
-<div class="modal" id="exportModal">
-  <div class="modal-header">
-    <h2><span class="iconify" data-icon="vuesax-linear:export" style="vertical-align:-3px;"></span> Export Folder</h2>
-    <button class="close-sidebar" id="closeExportBtn">✕</button>
-  </div>
-  <div class="modal-body">
-    <p style="font-size:13px;color:var(--dim);margin:0 0 14px;">Export all notes in <b id="exportFolderName">Home</b></p>
-    <div class="export-actions">
-      <button class="export-btn" id="exportTxtBtn">
-        <span class="export-icon" style="display:flex;"><span class="iconify" data-icon="vuesax-linear:document-text"></span></span>
-        <div class="export-label">Export as TXT<br><span class="export-desc">Plain text, one note per section</span></div>
-      </button>
-      <button class="export-btn" id="exportPdfBtn">
-        <span class="export-icon" style="display:flex;"><span class="iconify" data-icon="vuesax-linear:document-text-1"></span></span>
-        <div class="export-label">Export as PDF<br><span class="export-desc">Formatted printable document</span></div>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Tier 3 #10: Bulk move folder picker -->
-<div class="modal" id="bulkMoveModal">
-  <div class="modal-header">
-    <h2>Move to Folder</h2>
-    <button class="close-sidebar" id="closeBulkMoveBtn">✕</button>
-  </div>
-  <div class="modal-body" id="bulkMoveFolderList" style="display:flex;flex-direction:column;gap:4px;"></div>
-</div>
-
-<!-- Recycle Bin Modal -->
-<div class="modal" id="binModal" style="max-height:85vh;">
-  <div class="modal-header">
-    <h2><span class="iconify" data-icon="vuesax-linear:trash" style="vertical-align:-3px;"></span> Recycle Bin</h2>
-    <button class="close-sidebar" id="closeBinBtn">✕</button>
-  </div>
-  <div class="modal-body" id="binModalBody" style="display:flex;flex-direction:column;">
-    <!-- populated by renderBinModal() -->
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -839,7 +558,7 @@
     const body = document.getElementById('binModalBody');
     body.innerHTML = '';
     if (recycleBin.length === 0) {
-      body.innerHTML = '<div style="color:var(--dim);font-size:13px;text-align:center;padding:24px 0;"><span class="iconify" data-icon="vuesax-linear:trash" style="font-size:24px;display:block;margin:0 auto 8px;"></span> Recycle bin is empty</div>';
+      body.innerHTML = '<div style="color:var(--dim);font-size:13px;text-align:center;padding:24px 0;"><iconify-icon icon="solar:trash-bin-minimalistic-linear" style="font-size:24px;display:block;margin:0 auto 8px;"></iconify-icon> Recycle bin is empty</div>';
       return;
     }
     const emptyBtn = document.createElement('button');
@@ -978,7 +697,7 @@
                 if (note) {
                     if (note.audioId) deleteBlob('audio', note.audioId);
                     note.audioId = audioId;
-                    if (!note.title && !note.content) note.title = "Voice Memo";
+                    if (!note.title && !note.content) note.title = "Voice memo";
                     saveAll();
                     updateEditorUI();
                 }
@@ -988,13 +707,13 @@
                     folderId: currentFolderId,
                     catIds: [categories[0].id],
                     ts: Date.now(),
-                    title: "Voice Memo",
+                    title: "Voice memo",
                     content: "",
                     audioId: audioId
                 });
                 saveAll();
                 renderRapidView();
-                showToast("Voice Memo Saved");
+                showToast("Voice memo saved");
             }
             
             stream.getTracks().forEach(t => t.stop());
@@ -1009,7 +728,7 @@
         mediaRecorder.start();
     } catch (err) {
         console.error(err);
-        showToast("Microphone access denied or error");
+        showToast("Microphone access denied");
     }
   }
 
@@ -1311,7 +1030,7 @@
       const header = document.createElement("div");
       header.className = "list-header";
       header.style.cursor = "pointer";
-      header.innerHTML = `<div class="list-title"><span class="dot"></span>${escapeHTML(cat.name)} ${cat.prefix ? `(${escapeHTML(cat.prefix)})` : ''} <span style="font-size:11px;color:var(--dim);font-weight:400;">(${items.length})</span></div>`;
+      header.innerHTML = `<div class="list-title">${escapeHTML(cat.name)}${cat.prefix ? `<span style="font-size:9.5px;font-weight:500;opacity:0.55;letter-spacing:0;margin-left:2px;">${escapeHTML(cat.prefix)}</span>` : ''}</div><span class="list-count">${items.length}</span>`;
       // Tier 2 #7: Click category header → filter to show only this category
       header.addEventListener('click', () => {
         const isFiltered = container.dataset.filteredCat === cat.id;
@@ -1333,7 +1052,7 @@
       entriesDiv.className = "entries";
       
       if (items.length === 0) {
-        entriesDiv.innerHTML = `<div class="empty">Nothing here.</div>`;
+        entriesDiv.innerHTML = `<div class="empty">Nothing here yet.</div>`;
       } else {
         items.forEach(e => renderEntryCard(e, entriesDiv));
       }
@@ -1448,7 +1167,7 @@
     sec.className = "list";
     const header = document.createElement("div");
     header.className = "list-header";
-    header.innerHTML = `<div class="list-title"><span class="dot"></span>Search Results <span style="font-size:11px;color:var(--dim);font-weight:400;">(${results.length})</span></div>`;
+    header.innerHTML = `<div class="list-title">Search results</div><span class="list-count">${results.length}</span>`;
     sec.appendChild(header);
 
     const entriesDiv = document.createElement("div");
@@ -1567,7 +1286,7 @@ if (validRecents.length > 0) {
   validRecents.forEach(rId => {
     const chip = document.createElement("div");
     chip.className = `recent-chip ${rId === currentFolderId && currentView === 'rapid' ? 'active' : ''}`;
-    chip.innerHTML = `${rId === 'root' ? '🏠' : '📂'} ${getFolderName(rId)}`;
+    chip.textContent = getFolderName(rId);
     chip.onclick = () => { currentFolderId = rId; updateRecents(rId); toggleModal('sidebar', false); switchView('rapid'); };
     recentContainer.appendChild(chip);
   });
@@ -1577,9 +1296,7 @@ function drawFolder(folder, depth) {
         const div = document.createElement("div");
         const isActive = folder.id === currentFolderId && currentView === 'rapid';
         div.className = `folder-item folder-indent-${depth} ${isActive ? 'active' : ''}`;
-        let icon = depth === 0 ? '🏠' : (depth === 1 ? '📂' : '📄');
-        
-        div.innerHTML = `<span>${icon} ${folder.name}</span> <div><span class="f-settings" title="Settings" style="margin-right:8px;font-size:14px;">⚙️</span><span class="f-del" title="Delete">✕</span></div>`;
+        div.innerHTML = `<span>${escapeHTML(folder.name)}</span><div style="display:flex;gap:8px;"><span class="f-settings" title="Settings">⚙</span><span class="f-del" title="Delete">✕</span></div>`;
         div.onclick = (e) => {
             if (e.target.classList.contains('f-del')) {
                 if(!confirm("Delete folder and all sub-folders? Notes move to Home.")) return;
@@ -1636,7 +1353,7 @@ function drawFolder(folder, depth) {
   let _faChecked = null;          // null = all, array = specific folder ids
 
   function getDictFolderLabel(entry) {
-    if (!entry.folders || entry.folders.length === 0) return 'All Folders';
+    if (!entry.folders || entry.folders.length === 0) return 'All folders';
     return `${entry.folders.length} folder${entry.folders.length !== 1 ? 's' : ''}`;
   }
 
@@ -1659,7 +1376,7 @@ function drawFolder(folder, depth) {
       row.innerHTML = `
         <div class="dict-check">${isSelected ? '✓' : ''}</div>
         <div class="dict-kv"><b>${escapeHTML(entry.key)}</b> <span style="color:var(--dim)">→</span> ${escapeHTML(entry.val)}</div>
-        <span class="dict-folder-chip ${isScoped ? 'scoped' : ''}" title="Folder access">📂 ${escapeHTML(getDictFolderLabel(entry))}</span>
+        <span class="dict-folder-chip ${isScoped ? 'scoped' : ''}" title="Folder access">${escapeHTML(getDictFolderLabel(entry))}</span>
         <button class="dict-del-btn" title="Delete">✕</button>
       `;
       // Checkbox toggle
@@ -1710,7 +1427,7 @@ function drawFolder(folder, depth) {
 
   function updateDictFolderLabel(folderList) {
     const lbl = document.getElementById('dictFolderAccessLabel');
-    lbl.textContent = 'Allowed in: ' + (!folderList || folderList.length === 0 ? 'All Folders' : `${folderList.length} folder${folderList.length !== 1 ? 's' : ''}`);
+    lbl.textContent = 'Allowed in: ' + (!folderList || folderList.length === 0 ? 'All folders' : `${folderList.length} folder${folderList.length !== 1 ? 's' : ''}`);
   }
 
   // ── Folder Access Modal ──
@@ -1745,7 +1462,7 @@ function drawFolder(folder, depth) {
     // Allow All button
     const allBtn = document.createElement('button');
     allBtn.className = 'fa-allow-all-btn';
-    allBtn.textContent = '✨ Allow in All Folders';
+    allBtn.textContent = 'Allow in all folders';
     allBtn.onclick = () => { _faChecked = null; applyFolderAccess(); toggleModal('folderAccessModal', false); };
     list.appendChild(allBtn);
     const hint = document.createElement('div');
@@ -1759,13 +1476,12 @@ function drawFolder(folder, depth) {
       const row = document.createElement('div');
       row.className = 'fa-row' + (isChecked ? ' checked' : '');
       row.style.paddingLeft = (12 + depth * 18) + 'px';
-      const icon = depth === 0 ? '🏠' : (depth === 1 ? '📂' : '📄');
       const chk = document.createElement('div');
       chk.className = 'fa-check' + (isChecked ? ' checked' : (isInherited ? ' inherited' : ''));
       chk.textContent = (isChecked || isInherited) ? '✓' : '';
       const lbl = document.createElement('div');
       lbl.style.cssText = `font-size:14px;flex:1;color:${isInherited ? 'var(--dim)' : 'var(--text)'};`;
-      lbl.innerHTML = `${icon} ${escapeHTML(folder.name)}${isInherited ? ' <span style="font-size:11px;color:var(--accent);">(inherited)</span>' : ''}`;
+      lbl.textContent = folder.name + (isInherited ? ' (inherited)' : '');
       row.appendChild(chk);
       row.appendChild(lbl);
       row.onclick = () => {
