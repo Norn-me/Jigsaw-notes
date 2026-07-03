@@ -114,9 +114,10 @@
   .checklist-btn.active, .pin-btn.is-pinned { background: var(--color-primary-flat); color: var(--color-primary); border-color: rgba(76,211,111,0.35); }
   .media-btn { background: none; border: none; color: var(--text-subtle); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 7px; cursor: pointer; transition: color var(--dur-fast), background var(--dur-fast); flex-shrink: 0; }
   .media-btn:hover { color: var(--text-muted); background: var(--color-default-flat); }
-  #noteContent { flex: 1; width: 100%; max-width: 768px; margin: 0 auto; resize: none; background: var(--surface-app); color: var(--color-foreground); border: none; padding: var(--space-6) var(--space-5); font-size: var(--text-medium); line-height: 1.7; outline: none; font-family: var(--font-sans); }
+  #noteContent { flex: 1; width: 100%; max-width: 768px; margin: 0 auto; background: var(--surface-app); color: var(--color-foreground); border: none; padding: var(--space-6) var(--space-5); font-size: var(--text-medium); line-height: 1.7; outline: none; font-family: var(--font-sans); white-space: pre-wrap; word-wrap: break-word; }
   .editor-audio { width: 100%; max-width: 768px; margin: 0 auto; padding: var(--space-4) var(--space-5) 0; background: transparent; }
-  #noteContent::placeholder { color: var(--text-muted); }
+  #noteContent.is-empty::before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
+  .format-btn.active { background: var(--color-primary-flat); border-color: rgba(76,211,111,0.4); color: var(--color-primary); }
   #bottom-dock { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-app); border-top: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom)); z-index: 90; transition: bottom 0.1s ease-out; }
   .dock-controls { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
   #bottom-dock.editor-mode .dock-controls { margin-bottom: 0; }
@@ -404,7 +405,7 @@
     </div>
   </div>
   <div id="editorAudioContainer" class="editor-audio" style="display:none;"></div>
-  <textarea id="noteContent" placeholder="Start writing..."></textarea>
+  <div id="noteContent" contenteditable="true" data-placeholder="Start writing..." class="is-empty"></div>
 </div>
 
 <div class="view" id="view-rapid">
@@ -747,6 +748,40 @@
     return div.innerHTML;
   }
 
+  // Notes created before rich text support (or via rapid-add) store plain text in
+  // `content`; notes edited in the rich editor store HTML and set `richHTML: true`.
+  function noteContentToHTML(note) {
+    if (!note || !note.content) return '';
+    return note.richHTML ? note.content : escapeHTML(note.content);
+  }
+
+  function noteContentToText(note) {
+    if (!note || !note.content) return '';
+    if (!note.richHTML) return note.content;
+    // Chrome represents editor line breaks as sibling <div>s (not <br>), so walk the
+    // DOM rather than regex-replacing tags to avoid double-counting blank lines.
+    const container = document.createElement('div');
+    container.innerHTML = note.content;
+    let text = '';
+    (function walk(node) {
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          text += child.textContent;
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          if (child.tagName === 'BR') {
+            text += '\n';
+          } else if (child.tagName === 'DIV' || child.tagName === 'P') {
+            if (text.length > 0 && !text.endsWith('\n')) text += '\n';
+            walk(child);
+          } else {
+            walk(child);
+          }
+        }
+      });
+    })(container);
+    return text;
+  }
+
   function classifyText(text) {
     let trimmed = text.trim();
     let catIds = [];
@@ -798,13 +833,18 @@
     setTimeout(() => t.classList.remove("show"), 1800);
   }
 
+  function updateEditorPlaceholder() {
+    const el = document.getElementById("noteContent");
+    el.classList.toggle('is-empty', el.textContent.trim() === '');
+  }
+
   function startOrOpenEmptyNote() {
     // Find an empty note in current folder
-    let emptyNote = entries.find(e => e.folderId === currentFolderId && e.content.trim() === '');
-    
+    let emptyNote = entries.find(e => noteContentToText(e).trim() === '');
+
     if (emptyNote) {
         currentNoteId = emptyNote.id;
-        document.getElementById("noteContent").value = emptyNote.content;
+        document.getElementById("noteContent").innerHTML = noteContentToHTML(emptyNote);
     } else {
         currentNoteId = "n_" + Date.now().toString(36);
         let newEntry = {
@@ -813,13 +853,15 @@
             catIds: [categories[0].id],
             ts: Date.now(),
             title: "",
-            content: ""
+            content: "",
+            richHTML: true
         };
         entries.unshift(newEntry);
-        document.getElementById("noteContent").value = "";
+        document.getElementById("noteContent").innerHTML = "";
     }
     updateRecentNotes(currentNoteId);
     updateEditorUI();
+    updateEditorPlaceholder();
     setTimeout(() => document.getElementById("noteContent").focus(), 100);
   }
 
@@ -828,9 +870,10 @@
     if (!note) return;
     currentNoteId = id;
     currentFolderId = note.folderId;
-    document.getElementById("noteContent").value = note.content;
+    document.getElementById("noteContent").innerHTML = noteContentToHTML(note);
     updateRecentNotes(currentNoteId);
     updateEditorUI();
+    updateEditorPlaceholder();
     switchView('editor');
   }
 
@@ -843,22 +886,26 @@
 
   function autoSaveNote() {
     if (!currentNoteId) return;
-    const content = document.getElementById("noteContent").value;
     const note = entries.find(e => e.id === currentNoteId);
     if (note) {
+        const wasEmpty = noteContentToText(note).trim() === '';
+        note.content = document.getElementById("noteContent").innerHTML;
+        note.richHTML = true;
+        const plain = noteContentToText(note);
+
         // If content is completely new (was empty), try to classify it ONCE based on prefix
-        if (note.content.trim() === '' && content.trim() !== '') {
-            const firstLine = content.split('\n')[0];
+        if (wasEmpty && plain.trim() !== '') {
+            const firstLine = plain.split('\n')[0];
             const { catIds } = classifyText(firstLine);
             note.catIds = catIds;
         }
-        
-        note.content = content;
-        note.title = content.split('\n')[0].trim() || "";
+
+        note.title = plain.split('\n')[0].trim() || "";
         note.ts = Date.now();
         saveAll();
         updateEditorUI();
     }
+    updateEditorPlaceholder();
   }
 
   function updateEditorUI() {
@@ -939,7 +986,8 @@
         catIds: catIds,
         ts: Date.now(),
         title: expanded.split('\n')[0],
-        content: expanded
+        content: escapeHTML(expanded),
+        richHTML: true
     });
     saveAll();
     input.value = "";
@@ -1002,7 +1050,7 @@
     }
 
     categories.forEach(cat => {
-      const items = entries.filter(e => e.catIds.includes(cat.id) && e.folderId === currentFolderId && e.content.trim() !== '');
+      const items = entries.filter(e => e.catIds.includes(cat.id) && e.folderId === currentFolderId && noteContentToText(e).trim() !== '');
       
       const sec = document.createElement("section");
       sec.className = "list";
@@ -1072,9 +1120,10 @@
       div.addEventListener('dragstart', ev => { ev.dataTransfer.setData('text/plain', e.id); });
     }
 
-    let preview = e.content.split('\n').slice(1).join(' ').trim();
+    const plainContent = noteContentToText(e);
+    let preview = plainContent.split('\n').slice(1).join(' ').trim();
     // Tier 3 #9: Check for checklist content
-    const checklistHtml = renderChecklistPreview(e.content);
+    const checklistHtml = renderChecklistPreview(plainContent);
     // Tier 3 #12: Linkify preview
     const previewHtml = preview ? linkifyText(escapeHTML(preview)) : '';
     const folderTag = showFolder ? `<span class="search-result-folder">in ${escapeHTML(getFolderName(e.folderId))}</span>` : '';
@@ -1158,8 +1207,9 @@
   // ── Tier 3 #8: Search ──
   function renderSearchResults(query, container) {
     const results = entries.filter(e => {
-      if (e.content.trim() === '') return false;
-      const haystack = (e.title + ' ' + e.content).toLowerCase();
+      const plain = noteContentToText(e);
+      if (plain.trim() === '') return false;
+      const haystack = (e.title + ' ' + plain).toLowerCase();
       return haystack.includes(query);
     });
 
@@ -1807,16 +1857,22 @@ function drawFolder(folder, depth) {
   // ── Tier 3 #9: Checklist toggle button ──
   document.getElementById('checklistBtn').addEventListener('click', () => {
     if (!currentNoteId) return;
-    const ta = document.getElementById('noteContent');
-    const pos = ta.selectionStart;
-    const val = ta.value;
-    
-    // Find current line
-    let lineStart = val.lastIndexOf('\n', pos - 1) + 1;
-    let lineEnd = val.indexOf('\n', pos);
-    if (lineEnd === -1) lineEnd = val.length;
-    const line = val.slice(lineStart, lineEnd);
-    
+    const editor = document.getElementById('noteContent');
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const anchor = sel.getRangeAt(0);
+
+    // Select the whole current line via line-boundary selection movement
+    sel.collapse(anchor.startContainer, anchor.startOffset);
+    try {
+      sel.modify('move', 'backward', 'lineboundary');
+      sel.modify('extend', 'forward', 'lineboundary');
+    } catch (err) {
+      return;
+    }
+    const line = sel.toString();
+
     let newLine;
     if (/^\s*\[x\]/i.test(line)) {
       // [x] → remove checkbox
@@ -1828,11 +1884,8 @@ function drawFolder(folder, depth) {
       // No checkbox → add [ ]
       newLine = line.replace(/^(\s*)/, '$1[ ] ');
     }
-    
-    ta.value = val.slice(0, lineStart) + newLine + val.slice(lineEnd);
-    const newPos = lineStart + newLine.length;
-    ta.setSelectionRange(newPos, newPos);
-    ta.focus();
+
+    document.execCommand('insertText', false, newLine);
     autoSaveNote();
   });
 
@@ -1885,13 +1938,13 @@ function drawFolder(folder, depth) {
   });
 
   document.getElementById('exportTxtBtn').addEventListener('click', () => {
-    const folderEntries = entries.filter(e => e.folderId === currentFolderId && e.content.trim() !== '');
+    const folderEntries = entries.filter(e => e.folderId === currentFolderId && noteContentToText(e).trim() !== '');
     if (folderEntries.length === 0) { showToast('No notes to export'); return; }
     const folderName = getFolderName(currentFolderId);
     let txt = `=== ${folderName} ===\nExported: ${new Date().toLocaleString()}\n\n`;
     folderEntries.forEach((e, i) => {
       const catNames = getCats(e.catIds).map(c=>c.name).join(', ');
-      txt += `--- ${i + 1}. [${catNames}] ---\n${e.content}\n\n`;
+      txt += `--- ${i + 1}. [${catNames}] ---\n${noteContentToText(e)}\n\n`;
     });
     const blob = new Blob([txt], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -1903,7 +1956,7 @@ function drawFolder(folder, depth) {
   });
 
   document.getElementById('exportPdfBtn').addEventListener('click', () => {
-    const folderEntries = entries.filter(e => e.folderId === currentFolderId && e.content.trim() !== '');
+    const folderEntries = entries.filter(e => e.folderId === currentFolderId && noteContentToText(e).trim() !== '');
     if (folderEntries.length === 0) { showToast('No notes to export'); return; }
     const folderName = getFolderName(currentFolderId);
     // Build HTML for print-to-PDF
@@ -1917,7 +1970,7 @@ function drawFolder(folder, depth) {
     html += `<h1>${escapeHTML(folderName)}</h1>`;
     folderEntries.forEach(e => {
       const catNames = getCats(e.catIds).map(c=>c.name).join(', ');
-      html += `<div class="note"><div class="note-cat">${escapeHTML(catNames)}</div><div class="note-content">${escapeHTML(e.content)}</div></div>`;
+      html += `<div class="note"><div class="note-cat">${escapeHTML(catNames)}</div><div class="note-content">${noteContentToHTML(e)}</div></div>`;
     });
     html += `<div class="footer">Exported from Jigsaw Notes • ${new Date().toLocaleString()}</div></body></html>`;
     const printWin = window.open('', '_blank');
@@ -1943,73 +1996,75 @@ function drawFolder(folder, depth) {
   });
 
   // ── Formatting toolbar ──
-  function formatText(marker) {
-    const ta = document.getElementById('noteContent');
-    const start = ta.selectionStart;
-    const end   = ta.selectionEnd;
-    const val   = ta.value;
-    const mLen  = marker.length;
-    const selected = val.slice(start, end);
-
-    // Toggle OFF: if selection is already wrapped with this marker, remove it
-    if (start >= mLen && end <= val.length - mLen) {
-      if (val.slice(start - mLen, start) === marker && val.slice(end, end + mLen) === marker) {
-        ta.value = val.slice(0, start - mLen) + selected + val.slice(end + mLen);
-        ta.setSelectionRange(start - mLen, end - mLen);
-        ta.focus();
-        autoSaveNote();
-        return;
-      }
-    }
-
-    // Toggle ON: wrap selection (or insert empty markers with cursor inside)
-    if (selected) {
-      ta.value = val.slice(0, start) + marker + selected + marker + val.slice(end);
-      ta.setSelectionRange(start + mLen, end + mLen);
-    } else {
-      ta.value = val.slice(0, start) + marker + marker + val.slice(start);
-      ta.setSelectionRange(start + mLen, start + mLen);
-    }
-    ta.focus();
+  function formatText(command) {
+    const editor = document.getElementById('noteContent');
+    editor.focus();
+    document.execCommand(command, false, null);
+    updateFormatButtonStates();
     autoSaveNote();
   }
 
-  document.getElementById('fmtBold').addEventListener('click',   () => formatText('**'));
-  document.getElementById('fmtItalic').addEventListener('click', () => formatText('*'));
-  document.getElementById('fmtUnder').addEventListener('click',  () => formatText('__'));
-  document.getElementById('fmtStrike').addEventListener('click', () => formatText('~~'));
+  function updateFormatButtonStates() {
+    const commands = { fmtBold: 'bold', fmtItalic: 'italic', fmtUnder: 'underline', fmtStrike: 'strikeThrough' };
+    Object.keys(commands).forEach(btnId => {
+      let active = false;
+      try { active = document.queryCommandState(commands[btnId]); } catch (err) {}
+      document.getElementById(btnId).classList.toggle('active', active);
+    });
+  }
+
+  document.getElementById('fmtBold').addEventListener('click',   () => formatText('bold'));
+  document.getElementById('fmtItalic').addEventListener('click', () => formatText('italic'));
+  document.getElementById('fmtUnder').addEventListener('click',  () => formatText('underline'));
+  document.getElementById('fmtStrike').addEventListener('click', () => formatText('strikeThrough'));
+  document.getElementById('noteContent').addEventListener('keyup', updateFormatButtonStates);
+  document.getElementById('noteContent').addEventListener('mouseup', updateFormatButtonStates);
+
+  // Paste as plain text only — keeps stored notes free of foreign markup/scripts
+  // and lets the paletted format buttons remain the only source of rich tags.
+  document.getElementById('noteContent').addEventListener('paste', (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
 
   // Live shorthand expansion in Note mode (fires on Space, Enter, punctuation)
   document.getElementById("noteContent").addEventListener('keydown', (e) => {
     const triggers = [' ', 'Enter', ',', '.', ';', ':', '!', '?'];
     if (!triggers.includes(e.key)) return;
 
-    const ta = e.target;
-    const val = ta.value;
-    const pos = ta.selectionStart;
-
-    // Find the start of the current word (scan left from cursor)
-    let wordStart = pos;
-    while (wordStart > 0 && val[wordStart - 1] !== ' ' && val[wordStart - 1] !== '\n') wordStart--;
-    const word = val.slice(wordStart, pos);
-    if (!word) return;
-
     // Look up in dictionary (case-insensitive), respecting folder access
     const folder = folders.find(f => f.id === currentFolderId);
     if (folder && folder.shorthandEnabled === false) return;
+
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) return;
+
+    // Find the start of the current word (scan left from cursor within this text node)
+    const text = node.textContent;
+    const offset = range.startOffset;
+    let wordStart = offset;
+    while (wordStart > 0 && text[wordStart - 1] !== ' ' && text[wordStart - 1] !== '\n') wordStart--;
+    const word = text.slice(wordStart, offset);
+    if (!word) return;
+
     const allowed = dict.filter(en => isEntryAllowedInFolder(en, currentFolderId));
     const matchEntry = allowed.find(en => en.key.toLowerCase() === word.toLowerCase());
     if (!matchEntry) return;
 
     // Prevent default so the trigger character is inserted after replacement
     e.preventDefault();
-    const expansion = matchEntry.val;
+    const wordRange = document.createRange();
+    wordRange.setStart(node, wordStart);
+    wordRange.setEnd(node, offset);
+    sel.removeAllRanges();
+    sel.addRange(wordRange);
+
     const insertChar = e.key === 'Enter' ? '\n' : e.key;
-    const newVal = val.slice(0, wordStart) + expansion + insertChar + val.slice(pos);
-    ta.value = newVal;
-    // Place cursor right after the inserted expansion + trigger
-    const newPos = wordStart + expansion.length + 1;
-    ta.setSelectionRange(newPos, newPos);
+    document.execCommand('insertText', false, matchEntry.val + insertChar);
     // Trigger autosave
     autoSaveNote();
   });
