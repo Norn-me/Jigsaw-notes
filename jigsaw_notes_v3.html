@@ -117,6 +117,12 @@
   #noteContent { flex: 1; width: 100%; max-width: 768px; margin: 0 auto; background: var(--surface-app); color: var(--color-foreground); border: none; padding: var(--space-6) var(--space-5); font-size: var(--text-medium); line-height: 1.7; outline: none; font-family: var(--font-sans); white-space: pre-wrap; word-wrap: break-word; }
   .editor-audio { width: 100%; max-width: 768px; margin: 0 auto; padding: var(--space-4) var(--space-5) 0; background: transparent; }
   #noteContent.is-empty::before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
+  .checklist-line { display: flex; align-items: flex-start; gap: 8px; }
+  .checklist-checkbox { appearance: none; -webkit-appearance: none; margin-top: 4px; width: 17px; height: 17px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--color-border); background: transparent; cursor: pointer; position: relative; transition: background var(--dur-fast), border-color var(--dur-fast); }
+  .checklist-checkbox:hover { border-color: var(--color-primary); }
+  .checklist-checkbox:checked { background: var(--color-primary); border-color: var(--color-primary); }
+  .checklist-checkbox:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px; border: solid var(--surface-app); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+  .checklist-line[data-checked="true"] { color: var(--text-muted); text-decoration: line-through; }
   .format-btn.active { background: var(--color-primary-flat); border-color: rgba(76,211,111,0.4); color: var(--color-primary); }
   #bottom-dock { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface-app); border-top: 1px solid var(--color-divider); padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom)); z-index: 90; transition: bottom 0.1s ease-out; }
   .dock-controls { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
@@ -772,6 +778,9 @@
             text += '\n';
           } else if (child.tagName === 'DIV' || child.tagName === 'P') {
             if (text.length > 0 && !text.endsWith('\n')) text += '\n';
+            if (child.classList.contains('checklist-line')) {
+              text += child.dataset.checked === 'true' ? '[x] ' : '[ ] ';
+            }
             walk(child);
           } else {
             walk(child);
@@ -1855,37 +1864,142 @@ function drawFolder(folder, depth) {
   });
 
   // ── Tier 3 #9: Checklist toggle button ──
+  // Checklist lines are real DOM elements (a <div class="checklist-line"> holding a
+  // native checkbox + text), not literal "[ ]" characters typed into the note.
+  function makeChecklistCheckbox() {
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'checklist-checkbox';
+    cb.contentEditable = 'false';
+    cb.tabIndex = -1;
+    return cb;
+  }
+  function placeCaretAtEnd(el) {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    r.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
+  // Leading nodes of the editor that precede the first block/line boundary (DIV, P or BR) —
+  // Chrome leaves the very first line unwrapped until Enter is pressed, so it has no
+  // container element to toggle in place.
+  function getUnwrappedFirstLineNodes(editor) {
+    const nodes = [];
+    let n = editor.firstChild;
+    while (n) {
+      if (n.nodeType === 1 && (n.tagName === 'DIV' || n.tagName === 'P' || n.tagName === 'BR')) break;
+      nodes.push(n);
+      n = n.nextSibling;
+    }
+    return nodes;
+  }
   document.getElementById('checklistBtn').addEventListener('click', () => {
     if (!currentNoteId) return;
     const editor = document.getElementById('noteContent');
     editor.focus();
     const sel = window.getSelection();
     if (!sel.rangeCount) return;
-    const anchor = sel.getRangeAt(0);
+    const node = sel.getRangeAt(0).startContainer;
+    const existingLine = (node.nodeType === Node.TEXT_NODE ? node.parentElement : node).closest('.checklist-line');
 
-    // Select the whole current line via line-boundary selection movement
-    sel.collapse(anchor.startContainer, anchor.startOffset);
-    try {
-      sel.modify('move', 'backward', 'lineboundary');
-      sel.modify('extend', 'forward', 'lineboundary');
-    } catch (err) {
-      return;
-    }
-    const line = sel.toString();
-
-    let newLine;
-    if (/^\s*\[x\]/i.test(line)) {
-      // [x] → remove checkbox
-      newLine = line.replace(/^(\s*)\[x\]\s*/i, '$1');
-    } else if (/^\s*\[ \]/.test(line)) {
-      // [ ] → [x]
-      newLine = line.replace('[ ]', '[x]');
+    if (existingLine) {
+      // Turn back into a plain line, dropping the checkbox.
+      const plain = document.createElement('div');
+      plain.textContent = existingLine.textContent;
+      existingLine.replaceWith(plain);
+      placeCaretAtEnd(plain);
     } else {
-      // No checkbox → add [ ]
-      newLine = line.replace(/^(\s*)/, '$1[ ] ');
-    }
+      let container = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
+      while (container && container.parentElement !== editor) container = container.parentElement;
 
-    document.execCommand('insertText', false, newLine);
+      const line = document.createElement('div');
+      line.className = 'checklist-line';
+      line.dataset.checked = 'false';
+      line.appendChild(makeChecklistCheckbox());
+
+      if (container) {
+        line.appendChild(document.createTextNode(container.textContent));
+        container.replaceWith(line);
+      } else {
+        // Cursor is on the unwrapped first line.
+        const leading = getUnwrappedFirstLineNodes(editor);
+        const text = leading.map(n => n.textContent).join('');
+        leading.forEach(n => n.remove());
+        line.appendChild(document.createTextNode(text));
+        editor.insertBefore(line, editor.firstChild);
+      }
+      placeCaretAtEnd(line);
+    }
+    autoSaveNote();
+  });
+  // Toggle the done state when a checklist checkbox is clicked. The "checked" DOM
+  // property set by the click doesn't serialize into innerHTML on its own, so the
+  // attribute is kept in sync too — otherwise reopening the note would show every
+  // checkbox as unchecked even though it was saved as done.
+  document.getElementById('noteContent').addEventListener('click', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('checklist-checkbox')) return;
+    const line = e.target.closest('.checklist-line');
+    if (!line) return;
+    const checked = e.target.checked;
+    line.dataset.checked = checked ? 'true' : 'false';
+    if (checked) e.target.setAttribute('checked', ''); else e.target.removeAttribute('checked');
+    autoSaveNote();
+  });
+  // Enter inside a checklist line continues the list (Enter on an empty item exits it);
+  // Backspace at the very start of the text removes the checkbox.
+  document.getElementById('noteContent').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== 'Backspace') return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    const line = (node.nodeType === Node.TEXT_NODE ? node.parentElement : node).closest('.checklist-line');
+    if (!line) return;
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const textNode = node.nodeType === Node.TEXT_NODE ? node : line.lastChild;
+      const offset = node.nodeType === Node.TEXT_NODE ? range.startOffset : (textNode ? textNode.length : 0);
+      const full = textNode ? textNode.textContent : '';
+      const before = full.slice(0, offset);
+      const after = full.slice(offset);
+
+      if (!before && !after) {
+        // Empty checklist item — exit the list instead of adding another one.
+        const plain = document.createElement('div');
+        plain.innerHTML = '<br>';
+        line.replaceWith(plain);
+        placeCaretAtEnd(plain);
+        return;
+      }
+
+      if (textNode) textNode.textContent = before;
+      const newLine = document.createElement('div');
+      newLine.className = 'checklist-line';
+      newLine.dataset.checked = 'false';
+      newLine.appendChild(makeChecklistCheckbox());
+      newLine.appendChild(document.createTextNode(after));
+      line.after(newLine);
+      const r = document.createRange();
+      r.setStart(newLine.lastChild, 0);
+      r.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    } else if (e.key === 'Backspace') {
+      const atTextStart = node.nodeType === Node.TEXT_NODE && range.startOffset === 0 && node === line.lastChild;
+      if (!atTextStart) return;
+      e.preventDefault();
+      const plain = document.createElement('div');
+      plain.textContent = line.textContent;
+      line.replaceWith(plain);
+      const r = document.createRange();
+      r.setStart(plain.firstChild || plain, 0);
+      r.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(r);
+    }
     autoSaveNote();
   });
 

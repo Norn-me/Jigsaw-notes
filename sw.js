@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jigsaw-notes-v2';
+const CACHE_NAME = 'jigsaw-notes-v3';
 const ASSETS = [
   './',
   './jigsaw_notes_v3.html',
