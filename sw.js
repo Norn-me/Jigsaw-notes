@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jigsaw-notes-v4';
+const CACHE_NAME = 'jigsaw-notes-v5';
 const ASSETS = [
   './',
   './jigsaw_notes_v3.html',
@@ -31,7 +31,9 @@ self.addEventListener('activate', e => {
 // Fetch — cache first, network fallback
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => {
+    // Ignore the query string for navigations so share-target URLs
+    // (?shared_text=...) hit the cached app shell offline.
+    caches.match(e.request, { ignoreSearch: e.request.mode === 'navigate' }).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
         // Cache successful GET requests

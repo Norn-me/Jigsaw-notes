@@ -5,6 +5,15 @@
   "start_url": "./jigsaw_notes_v3.html",
   "scope": "./",
   "display": "standalone",
+  "share_target": {
+    "action": "./jigsaw_notes_v3.html",
+    "method": "GET",
+    "params": {
+      "title": "shared_title",
+      "text": "shared_text",
+      "url": "shared_url"
+    }
+  },
   "orientation": "portrait",
   "theme_color": "#161e17",
   "background_color": "#161e17",

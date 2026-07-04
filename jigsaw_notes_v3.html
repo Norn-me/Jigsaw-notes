@@ -157,8 +157,10 @@
   .format-btn { background: var(--surface-card); border: 1px solid var(--color-divider); color: var(--color-foreground); border-radius: var(--radius-tiny); padding: var(--space-1) 14px; font-size: 14px; font-family: var(--font-sans); cursor: pointer; flex-shrink: 0; transition: background var(--dur-fast); }
   .format-btn:active { background: var(--color-primary-flat); border-color: rgba(76,211,111,0.4); color: var(--color-primary); }
   #fmtBold { font-weight: 700; } #fmtItalic { font-style: italic; } #fmtUnder { text-decoration: underline; } #fmtStrike { text-decoration: line-through; }
-  .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.96); background: var(--surface-card); border: 1px solid var(--color-border); border-radius: var(--radius-large); width: 90%; max-width: 400px; padding: var(--space-5); z-index: 102; opacity: 0; pointer-events: none; transition: all var(--dur-base) var(--ease-out); display: flex; flex-direction: column; max-height: 80vh; box-shadow: var(--shadow-large); }
-  .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+  .modal { position: fixed; bottom: 0; left: 50%; transform: translate(-50%, 100%); background: var(--surface-card); border: 1px solid var(--color-border); border-bottom: none; border-radius: var(--radius-large) var(--radius-large) 0 0; width: 100%; max-width: 520px; padding: 0 var(--space-5) max(var(--space-5), env(safe-area-inset-bottom)); z-index: 102; opacity: 0; pointer-events: none; transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out); display: flex; flex-direction: column; max-height: 80vh; box-shadow: var(--shadow-large); }
+  .modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  .modal.dragging { transition: none; }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--color-border); margin: var(--space-2) auto var(--space-3); flex-shrink: 0; cursor: grab; touch-action: none; }
   .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
   .modal-header h2 { margin: 0; font-size: var(--text-medium); font-weight: var(--fw-bold); letter-spacing: var(--tracking-tight); }
   .modal-body { overflow-y: auto; flex: 1; }
@@ -251,6 +253,10 @@
   .dash-pin-title { font-weight: var(--fw-semibold); font-size: var(--text-small); color: var(--color-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
   .dash-pin-preview { font-size: var(--text-tiny); color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .dash-empty { color: var(--text-muted); font-size: var(--text-tiny); padding: var(--space-1) 0; }
+
+  /* ── Swipe gestures on entry cards ── */
+  .entry { touch-action: pan-y; }
+  .entry.swipe-snap { transition: transform 0.18s ease-out; }
 </style>
 </head>
 <body>
@@ -300,6 +306,7 @@
     <button class="dict-folder-btn" id="dictFolderAccessBtn">
       <iconify-icon icon="solar:folder-linear" width="16"></iconify-icon><span id="dictFolderAccessLabel">Allowed in: All folders</span>
     </button>
+    <p style="font-size:var(--text-tiny);color:var(--text-muted);margin:var(--space-2) 0 0;line-height:1.5;">Tip: use {date}, {time}, {day} or {datetime} in the expansion — they fill in the moment the shorthand is used.</p>
   </div>
   <div class="dict-multi-bar" id="dictMultiBar">
     <span id="dictMultiCount" style="font-size:var(--text-small);font-weight:600;flex:1;">0 selected</span>
@@ -861,6 +868,16 @@
     return false;
   }
 
+  // Dynamic tokens in shorthand expansions, resolved at the moment of expansion
+  function resolveShorthandTokens(val) {
+    const now = new Date();
+    return val
+      .replace(/\{date\}/gi, now.toLocaleDateString())
+      .replace(/\{time\}/gi, now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+      .replace(/\{day\}/gi, now.toLocaleDateString(undefined, { weekday: 'long' }))
+      .replace(/\{datetime\}/gi, now.toLocaleString());
+  }
+
   function expandShorthand(text) {
     const folder = folders.find(f => f.id === currentFolderId);
     if (folder && folder.shorthandEnabled === false) return text;
@@ -868,7 +885,7 @@
     let words = text.split(/(\s+)/);
     words = words.map(tok => {
       const entry = allowed.find(e => e.key.toLowerCase() === tok.trim().toLowerCase());
-      return entry ? entry.val : tok;
+      return entry ? resolveShorthandTokens(entry.val) : tok;
     });
     return words.join("");
   }
@@ -1283,6 +1300,7 @@
     `;
     
     div.addEventListener("click", (ev) => {
+      if (suppressClick) { suppressClick = false; return; }
       if (selectMode) {
         ev.preventDefault();
         toggleSelectEntry(e.id, div);
@@ -1290,13 +1308,49 @@
       }
       openNote(e.id);
     });
-    // Long press to enter select mode (mobile)
-    let longPressTimer;
-    div.addEventListener('touchstart', () => {
+    // Touch gestures: long-press → select mode; horizontal swipe → recategorize (right) or bin (left).
+    // HTML5 drag-and-drop stays wired for mouse users; it has no touch equivalent.
+    let longPressTimer, touchStartX = 0, touchStartY = 0, swipeDX = 0, swipeActive = false, suppressClick = false;
+    div.addEventListener('touchstart', (tev) => {
+      const t = tev.touches[0];
+      touchStartX = t.clientX; touchStartY = t.clientY;
+      swipeDX = 0; swipeActive = false; suppressClick = false;
+      div.classList.remove('swipe-snap');
       longPressTimer = setTimeout(() => { enterSelectMode(); toggleSelectEntry(e.id, div); }, 500);
     }, { passive: true });
-    div.addEventListener('touchend', () => clearTimeout(longPressTimer));
-    div.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+    div.addEventListener('touchmove', (tev) => {
+      const t = tev.touches[0];
+      const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) clearTimeout(longPressTimer);
+      if (selectMode) return;
+      if (!swipeActive && Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy) * 1.5) swipeActive = true;
+      if (swipeActive) {
+        swipeDX = dx;
+        div.style.transform = 'translateX(' + dx * 0.6 + 'px)';
+      }
+    }, { passive: true });
+    div.addEventListener('touchend', () => {
+      clearTimeout(longPressTimer);
+      if (!swipeActive) return;
+      suppressClick = true;
+      div.classList.add('swipe-snap');
+      div.style.transform = '';
+      if (swipeDX > 70) {
+        openEntryCatSheet(e.id);
+      } else if (swipeDX < -70) {
+        const entry = entries.find(en => en.id === e.id);
+        if (entry) softDeleteEntry(entry);
+        entries = entries.filter(en => en.id !== e.id);
+        pinnedNotes = pinnedNotes.filter(id => id !== e.id);
+        recentNotes = recentNotes.filter(id => id !== e.id);
+        saveAll(); renderRapidView();
+        showToast('Moved to bin');
+      }
+    });
+    div.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      if (swipeActive) { div.classList.add('swipe-snap'); div.style.transform = ''; }
+    });
 
     div.querySelector(".del").addEventListener("click", (ev) => {
       ev.stopPropagation();
@@ -1728,10 +1782,11 @@ function drawFolder(folder, depth) {
     });
   }
 
-  function renderSelectModals() {
-    // Select Category Modal
+  // Renders the category checklist for any note into the selectCatModal sheet.
+  // onChange runs after each toggle so callers can refresh their own view.
+  function renderCatPickerFor(noteId, onChange) {
     const catList = document.getElementById("selectCatList"); catList.innerHTML = "";
-    const note = entries.find(e => e.id === currentNoteId);
+    const note = entries.find(e => e.id === noteId);
     if (!note) return;
     categories.forEach(c => {
         const row = document.createElement("div"); row.className = "list-item";
@@ -1744,12 +1799,22 @@ function drawFolder(folder, depth) {
             } else {
                 note.catIds.push(c.id);
             }
-            saveAll(); 
-            updateEditorUI();
-            renderSelectModals();
+            saveAll();
+            onChange();
         };
         catList.appendChild(row);
     });
+  }
+
+  // Swipe-right target: category sheet for an entry card in rapid view
+  function openEntryCatSheet(entryId) {
+    const rerender = () => { renderCatPickerFor(entryId, rerender); renderRapidView(); };
+    renderCatPickerFor(entryId, rerender);
+    toggleModal('selectCatModal', true);
+  }
+
+  function renderSelectModals() {
+    renderCatPickerFor(currentNoteId, () => { updateEditorUI(); renderSelectModals(); });
 
     // Select Folder Modal
     const fList = document.getElementById("selectFolderList"); fList.innerHTML = "";
@@ -2265,14 +2330,10 @@ function drawFolder(folder, depth) {
     document.execCommand('insertText', false, text);
   });
 
-  // Live shorthand expansion in Note mode (fires on Space, Enter, punctuation)
+  // Live shorthand expansion + inline #tag capture in Note mode (fires on Space, Enter, punctuation)
   document.getElementById("noteContent").addEventListener('keydown', (e) => {
     const triggers = [' ', 'Enter', ',', '.', ';', ':', '!', '?'];
     if (!triggers.includes(e.key)) return;
-
-    // Look up in dictionary (case-insensitive), respecting folder access
-    const folder = folders.find(f => f.id === currentFolderId);
-    if (folder && folder.shorthandEnabled === false) return;
 
     const sel = window.getSelection();
     if (!sel.rangeCount || !sel.isCollapsed) return;
@@ -2288,20 +2349,51 @@ function drawFolder(folder, depth) {
     const word = text.slice(wordStart, offset);
     if (!word) return;
 
+    const selectWordRange = () => {
+      const wordRange = document.createRange();
+      wordRange.setStart(node, wordStart);
+      wordRange.setEnd(node, offset);
+      sel.removeAllRanges();
+      sel.addRange(wordRange);
+    };
+
+    // Inline #tag: "#word" tags the note with that category (created on the fly),
+    // then the typed token is removed — the tag lives in catIds, not the text.
+    if (word.length > 1 && word[0] === '#' && currentNoteId) {
+      e.preventDefault();
+      const name = word.slice(1);
+      let cat = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+      if (!cat) {
+        cat = { id: 'cat_' + Date.now().toString(36), name: name, prefix: '' };
+        categories.push(cat);
+      }
+      const note = entries.find(en => en.id === currentNoteId);
+      if (note && !note.catIds.includes(cat.id)) note.catIds.push(cat.id);
+      selectWordRange();
+      document.execCommand('delete', false, null);
+      const ic = e.key === 'Enter' ? '\n' : (e.key === ' ' ? '' : e.key);
+      if (ic) document.execCommand('insertText', false, ic);
+      saveAll();
+      updateEditorUI();
+      autoSaveNote();
+      showToast('Tagged: ' + cat.name);
+      return;
+    }
+
+    // Look up in dictionary (case-insensitive), respecting folder access
+    const folder = folders.find(f => f.id === currentFolderId);
+    if (folder && folder.shorthandEnabled === false) return;
+
     const allowed = dict.filter(en => isEntryAllowedInFolder(en, currentFolderId));
     const matchEntry = allowed.find(en => en.key.toLowerCase() === word.toLowerCase());
     if (!matchEntry) return;
 
     // Prevent default so the trigger character is inserted after replacement
     e.preventDefault();
-    const wordRange = document.createRange();
-    wordRange.setStart(node, wordStart);
-    wordRange.setEnd(node, offset);
-    sel.removeAllRanges();
-    sel.addRange(wordRange);
+    selectWordRange();
 
     const insertChar = e.key === 'Enter' ? '\n' : e.key;
-    document.execCommand('insertText', false, matchEntry.val + insertChar);
+    document.execCommand('insertText', false, resolveShorthandTokens(matchEntry.val) + insertChar);
     // Trigger autosave
     autoSaveNote();
   });
@@ -2341,6 +2433,59 @@ function drawFolder(folder, depth) {
     toggleModal('binModal', true);
   });
   document.getElementById('closeBinBtn').addEventListener('click', () => toggleModal('binModal', false));
+
+  // Bottom-sheet behavior: inject a grab handle into every modal and let a
+  // downward drag on the handle or header dismiss the sheet.
+  document.querySelectorAll('.modal').forEach(sheet => {
+    const handle = document.createElement('div');
+    handle.className = 'sheet-handle';
+    sheet.insertBefore(handle, sheet.firstChild);
+    let startY = 0, dy = 0, dragging = false;
+    const header = sheet.querySelector('.modal-header');
+    const targets = header ? [handle, header] : [handle];
+    targets.forEach(el => {
+      el.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY; dy = 0; dragging = true;
+        sheet.classList.add('dragging');
+      }, { passive: true });
+      el.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        dy = Math.max(0, e.touches[0].clientY - startY);
+        sheet.style.transform = 'translate(-50%, ' + dy + 'px)';
+      }, { passive: true });
+      el.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        sheet.classList.remove('dragging');
+        sheet.style.transform = '';
+        if (dy > 80) toggleModal(sheet.id, false);
+      });
+    });
+  });
+
+  // Web Share Target: text shared from other apps arrives as query params
+  // (see share_target in manifest.json) and goes through the normal rapid
+  // capture pipeline — prefix classification and shorthand expansion included.
+  (function handleSharedText() {
+    const params = new URLSearchParams(location.search);
+    const shared = [params.get('shared_title'), params.get('shared_text'), params.get('shared_url')]
+      .filter(Boolean).join(' ').trim();
+    if (!shared) return;
+    history.replaceState(history.state, '', location.pathname);
+    const { catIds, clean } = classifyText(shared);
+    const expanded = expandShorthand(clean);
+    entries.unshift({
+      id: 'n_' + Date.now().toString(36),
+      folderId: currentFolderId,
+      catIds: catIds,
+      ts: Date.now(),
+      title: expanded.split('\n')[0],
+      content: escapeHTML(expanded),
+      richHTML: true
+    });
+    saveAll();
+    showToast('Added to ' + getCats(catIds).map(c => c.name).join(', '));
+  })();
 
   // Init
   autoPurgeBin(); // Remove notes older than 15 days on startup
