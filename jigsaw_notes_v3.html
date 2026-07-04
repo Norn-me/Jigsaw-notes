@@ -1772,6 +1772,109 @@
       padding: var(--space-1) 0;
     }
 
+    /* ── AI features (DeepSeek) ── */
+    .dash-ai-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      background: var(--color-danger-flat);
+      color: var(--color-danger);
+      border-radius: var(--radius-medium);
+      padding: var(--space-3);
+      font-size: var(--text-tiny);
+      line-height: 1.5;
+      margin-bottom: var(--space-4);
+    }
+
+    .dash-ai-banner-dismiss {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 0 2px;
+      margin-left: auto;
+      flex-shrink: 0;
+      font-family: var(--font-sans);
+    }
+
+    .dash-ai-section {
+      margin-bottom: var(--space-5);
+    }
+
+    .dash-ai-refresh {
+      background: none;
+      border: none;
+      color: var(--text-subtle);
+      cursor: pointer;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .dash-ai-refresh:hover {
+      color: var(--color-primary);
+    }
+
+    .dash-ai-card {
+      background: var(--surface-card);
+      border: 1px solid var(--color-divider);
+      border-radius: var(--radius-medium);
+      padding: var(--space-3);
+    }
+
+    .dash-ai-summary-text {
+      font-size: var(--text-small);
+      color: var(--color-foreground);
+      line-height: 1.55;
+    }
+
+    .dash-ai-attention {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: var(--space-2);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--color-divider);
+    }
+
+    .dash-ai-attention-item {
+      display: flex;
+      gap: 6px;
+      font-size: var(--text-tiny);
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .dash-ai-attention-item[data-note-id] {
+      cursor: pointer;
+    }
+
+    .dash-ai-attention-item[data-note-id]:hover {
+      color: var(--color-foreground);
+    }
+
+    .dash-ai-skel-line {
+      height: 10px;
+      border-radius: var(--radius-full);
+      background: var(--color-divider);
+      margin: 6px 0;
+      animation: aiSkelPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes aiSkelPulse {
+
+      0%,
+      100% {
+        opacity: 0.45;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
     /* ── Swipe gestures on entry cards ── */
     .entry {
       touch-action: pan-y;
@@ -1794,6 +1897,7 @@
     </div>
     <div class="sidebar-actions">
       <button class="btn-sidebar" id="menuCatsBtn">Categories</button>
+      <button class="btn-sidebar" id="menuAiBtn">AI</button>
       <button class="btn-sidebar" id="menuBinBtn" style="position:relative;">Bin<span class="bin-badge" id="binBadge"
           style="display:none;"></span></button>
     </div>
@@ -1938,6 +2042,24 @@
     <div class="modal-body" id="binModalBody" style="display:flex;flex-direction:column;"></div>
   </div>
 
+  <div class="modal" id="aiModal">
+    <div class="modal-header">
+      <h2>AI settings</h2>
+      <button class="close-sidebar" id="closeAiBtn">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:var(--space-3);">
+      <p style="font-size:var(--text-tiny);color:var(--text-muted);margin:0;line-height:1.5;">Action-item extraction
+        and folder summaries are powered by DeepSeek. Your API key is stored only on this device — create one at
+        platform.deepseek.com.</p>
+      <div class="modal-row" style="margin-bottom:0;">
+        <input id="aiKeyInput" type="password" placeholder="DeepSeek API key (sk-…)" autocomplete="off">
+        <button id="aiKeySave">Save</button>
+      </div>
+      <button class="btn-sidebar" id="aiTestBtn">Test connection</button>
+      <p id="aiTestResult" style="font-size:var(--text-tiny);color:var(--text-muted);margin:0;min-height:16px;"></p>
+    </div>
+  </div>
+
   <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;">
 
   <div id="recordingOverlay"
@@ -1989,6 +2111,9 @@
           </button>
           <button class="checklist-btn" id="checklistBtn" title="Toggle checklist">
             <iconify-icon icon="solar:checklist-minimalistic-linear" width="15"></iconify-icon>
+          </button>
+          <button class="media-btn" id="aiActionItemsBtn" title="Extract action items (AI)">
+            <iconify-icon icon="solar:magic-stick-3-linear" width="16"></iconify-icon>
           </button>
           <span class="editor-action-divider"></span>
           <button class="pin-btn" id="editorPinBtn" title="Pin note">
@@ -2057,6 +2182,10 @@
     const PINNED_NOTES_KEY = "jigsaw_pinned_v3";
     const BIN_KEY = "jigsaw_bin_v3";
     const BIN_TTL_DAYS = 15;
+    const AI_KEY = "jigsaw_deepseek_key";
+    const AI_STATUS_KEY = "jigsaw_ai_status"; // 'ok' | 'no_credit' | 'bad_key'
+    const AI_BANNER_DISMISS_KEY = "jigsaw_ai_banner_dismissed";
+    const AI_SUMMARY_CACHE_KEY = "jigsaw_ai_summaries";
 
     // Migrate dict from old {key:val} object to new [{id,key,val,folders}] array format
     function migrateDict(raw) {
@@ -2660,6 +2789,256 @@
       return new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
     }
 
+    // ── DeepSeek AI: chat client, action-item extraction, folder summaries ──
+    function getAiKey() { return (localStorage.getItem(AI_KEY) || '').trim(); }
+    function getAiStatus() { return localStorage.getItem(AI_STATUS_KEY) || 'ok'; }
+
+    function setAiStatus(status) {
+      const prev = getAiStatus();
+      localStorage.setItem(AI_STATUS_KEY, status);
+      if (status === 'ok') localStorage.removeItem(AI_BANNER_DISMISS_KEY);
+      if (prev !== status) renderDashboard();
+    }
+
+    async function dsChat(messages, { json = false, maxTokens = 1000 } = {}) {
+      const key = getAiKey();
+      if (!key) throw new Error('no_key');
+      let res;
+      try {
+        res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: messages,
+            max_tokens: maxTokens,
+            ...(json ? { response_format: { type: 'json_object' } } : {})
+          })
+        });
+      } catch (err) {
+        throw new Error('network');
+      }
+      if (res.status === 402) { setAiStatus('no_credit'); throw new Error('no_credit'); } // Insufficient Balance
+      if (res.status === 401) { setAiStatus('bad_key'); throw new Error('bad_key'); }
+      if (!res.ok) throw new Error('api_' + res.status);
+      setAiStatus('ok');
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+
+    function aiErrorText(err) {
+      return {
+        no_key: 'Add your DeepSeek API key in AI settings first',
+        no_credit: 'DeepSeek credits exhausted — top up to keep using AI',
+        bad_key: 'DeepSeek API key was rejected — check AI settings',
+        network: "Couldn't reach DeepSeek — check your connection"
+      }[err.message] || 'AI request failed (' + err.message + ')';
+    }
+
+    async function checkAiBalance() {
+      if (!getAiKey()) return;
+      try {
+        const res = await fetch('https://api.deepseek.com/user/balance', {
+          headers: { 'Authorization': 'Bearer ' + getAiKey() }
+        });
+        if (res.status === 401) { setAiStatus('bad_key'); return; }
+        if (!res.ok) return;
+        const data = await res.json();
+        setAiStatus(data.is_available ? 'ok' : 'no_credit');
+      } catch (err) { /* offline — keep last known status */ }
+    }
+
+    async function extractActionItems() {
+      if (!currentNoteId) return;
+      const note = entries.find(e => e.id === currentNoteId);
+      if (!note) return;
+      const text = noteContentToText(note).trim();
+      if (!text) { showToast('Note is empty'); return; }
+      if (!getAiKey()) { openAiSettings(); return; }
+      const btn = document.getElementById('aiActionItemsBtn');
+      if (btn.dataset.busy) return;
+      btn.dataset.busy = '1';
+      btn.style.opacity = '0.4';
+      showToast('Extracting action items…');
+      try {
+        const raw = await dsChat([
+          {
+            role: 'system', content: 'You extract action items from meeting notes. Reply with JSON only: '
+              + '{"items":["task 1","task 2"]}. Each item is one short imperative sentence; include the owner and '
+              + 'deadline in the sentence when the notes mention them. Only include concrete tasks someone committed '
+              + 'to do. If there are none, reply {"items":[]}.'
+          },
+          { role: 'user', content: text.slice(0, 8000) }
+        ], { json: true, maxTokens: 600 });
+        let items = [];
+        try { items = JSON.parse(raw).items || []; } catch (err) { }
+        items = items.filter(t => typeof t === 'string' && t.trim()).map(t => t.trim());
+        if (items.length === 0) { showToast('No action items found'); return; }
+        insertActionItemsBelowTitle(items);
+        showToast(items.length + ' action item' + (items.length > 1 ? 's' : '') + ' added');
+      } catch (err) {
+        showToast(aiErrorText(err));
+      } finally {
+        delete btn.dataset.busy;
+        btn.style.opacity = '';
+      }
+    }
+
+    // Chrome mixes representations inside contenteditable: lines can be unwrapped
+    // text nodes separated by BRs, or DIV-wrapped blocks. Inserting block-level
+    // checklist lines between unwrapped runs would visually split them but leave
+    // noteContentToText unable to see the line boundary, so wrap every inline run
+    // into its own DIV (BRs between runs become the block boundary; a BR with no
+    // preceding run is an empty line and keeps a <div><br></div> placeholder).
+    function normalizeEditorBlocks(editor) {
+      let n = editor.firstChild;
+      let run = [];
+      const flush = (before) => {
+        if (run.length === 0) return;
+        const div = document.createElement('div');
+        editor.insertBefore(div, before);
+        run.forEach(x => div.appendChild(x));
+        run = [];
+      };
+      while (n) {
+        const next = n.nextSibling;
+        if (n.nodeType === 1 && (n.tagName === 'DIV' || n.tagName === 'P')) {
+          flush(n);
+        } else if (n.nodeType === 1 && n.tagName === 'BR') {
+          if (run.length > 0) {
+            flush(n);
+            editor.removeChild(n);
+          } else {
+            const div = document.createElement('div');
+            div.appendChild(document.createElement('br'));
+            editor.replaceChild(div, n);
+          }
+        } else {
+          run.push(n);
+        }
+        n = next;
+      }
+      flush(null);
+    }
+
+    // The first line of a note doubles as its title, so extracted items go in as
+    // checklist lines right after the first block.
+    function insertActionItemsBelowTitle(items) {
+      const editor = document.getElementById('noteContent');
+      normalizeEditorBlocks(editor);
+      const anchor = editor.firstChild ? editor.firstChild.nextSibling : null;
+      items.forEach(t => {
+        const line = document.createElement('div');
+        line.className = 'checklist-line';
+        line.dataset.checked = 'false';
+        line.appendChild(makeChecklistCheckbox());
+        line.appendChild(document.createTextNode(t));
+        editor.insertBefore(line, anchor);
+      });
+      autoSaveNote();
+    }
+
+    // ── AI folder summary (home dashboard) ──
+    let aiSummaryInFlight = null; // folderId currently being summarized
+
+    function aiRecentFolderId() {
+      return recentFolders.find(id => id !== 'root' && folders.some(f => f.id === id)) || null;
+    }
+
+    // Cheap change detector: a summary is reused until the folder's entry count
+    // or newest timestamp moves, so re-renders don't burn tokens.
+    function folderFingerprint(folderId) {
+      const items = entries.filter(e => e.folderId === folderId);
+      let maxTs = 0;
+      items.forEach(e => { if ((e.ts || 0) > maxTs) maxTs = e.ts; });
+      return items.length + ':' + maxTs;
+    }
+
+    function getSummaryCache() {
+      try { return JSON.parse(localStorage.getItem(AI_SUMMARY_CACHE_KEY)) || {}; } catch (err) { return {}; }
+    }
+
+    function renderAiSummarySection(force) {
+      const box = document.getElementById('aiSummaryBox');
+      if (!box) return;
+      const folderId = box.dataset.folderId;
+      const fp = folderFingerprint(folderId);
+      const hit = getSummaryCache()[folderId];
+      if (!force && hit && hit.fp === fp) { fillAiSummary(box, hit); return; }
+      box.innerHTML = '<div class="dash-ai-skel-line" style="width:92%;"></div>'
+        + '<div class="dash-ai-skel-line" style="width:70%;"></div>'
+        + '<div class="dash-ai-skel-line" style="width:45%;"></div>';
+      if (aiSummaryInFlight === folderId && !force) return;
+      aiSummaryInFlight = folderId;
+      requestFolderSummary(folderId, fp).finally(() => {
+        if (aiSummaryInFlight === folderId) aiSummaryInFlight = null;
+      });
+    }
+
+    async function requestFolderSummary(folderId, fp) {
+      const folder = folders.find(f => f.id === folderId);
+      const items = entries
+        .filter(e => e.folderId === folderId && noteContentToText(e).trim() !== '')
+        .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+        .slice(0, 15);
+      const saveAndRender = (data) => {
+        const cache = getSummaryCache();
+        cache[folderId] = data;
+        Object.keys(cache).forEach(k => { if (!folders.some(f => f.id === k)) delete cache[k]; });
+        localStorage.setItem(AI_SUMMARY_CACHE_KEY, JSON.stringify(cache));
+        renderAiSummarySection(false);
+      };
+      if (!folder || items.length === 0) {
+        saveAndRender({ fp, ts: Date.now(), summary: 'Nothing in this folder yet.', attention: [] });
+        return;
+      }
+      const notesBlock = items.map(e => {
+        const cats = getCats(e.catIds).map(c => c.name).join(', ');
+        return '[' + e.id + '] (' + cats + ')\n' + noteContentToText(e).slice(0, 600);
+      }).join('\n---\n');
+      try {
+        const raw = await dsChat([
+          {
+            role: 'system', content: 'You summarize a folder of personal notes. Reply with JSON only: '
+              + '{"summary":"...","attention":[{"text":"...","noteId":"..."}]}. "summary" is 1-2 plain sentences '
+              + 'describing what the folder is currently about. "attention" lists up to 4 things needing action: '
+              + 'open to-dos, unanswered questions, deadlines, or unchecked checklist items (lines starting with '
+              + '"[ ]"). Keep each attention text under 12 words and set noteId to the bracketed id of the note it '
+              + 'came from. Use an empty array if nothing needs attention.'
+          },
+          { role: 'user', content: 'Folder "' + folder.name + '":\n\n' + notesBlock }
+        ], { json: true, maxTokens: 400 });
+        let parsed = {};
+        try { parsed = JSON.parse(raw); } catch (err) { }
+        saveAndRender({
+          fp: fp,
+          ts: Date.now(),
+          summary: typeof parsed.summary === 'string' ? parsed.summary : '',
+          attention: Array.isArray(parsed.attention)
+            ? parsed.attention.filter(a => a && typeof a.text === 'string').slice(0, 4)
+            : []
+        });
+      } catch (err) {
+        const box = document.getElementById('aiSummaryBox');
+        if (box && box.dataset.folderId === folderId) {
+          box.innerHTML = '<div class="dash-empty">' + escapeHTML(aiErrorText(err)) + '</div>';
+        }
+      }
+    }
+
+    function fillAiSummary(box, data) {
+      const attHtml = (data.attention || []).map(a => {
+        const valid = a.noteId && entries.some(e => e.id === a.noteId);
+        return '<div class="dash-ai-attention-item"' + (valid ? ' data-note-id="' + escapeHTML(a.noteId) + '"' : '') + '>'
+          + '<iconify-icon icon="solar:danger-triangle-linear" width="13" style="flex-shrink:0;margin-top:2px;"></iconify-icon>'
+          + '<span>' + escapeHTML(a.text) + '</span></div>';
+      }).join('');
+      box.innerHTML = '<div class="dash-ai-summary-text">' + escapeHTML(data.summary || 'Nothing to summarize yet.') + '</div>'
+        + (attHtml ? '<div class="dash-ai-attention">' + attHtml + '</div>' : '');
+      box.querySelectorAll('[data-note-id]').forEach(el =>
+        el.addEventListener('click', () => openNote(el.dataset.noteId)));
+    }
+
     function renderDashboard() {
       const el = document.getElementById("dashboardHeader");
       if (!el) return;
@@ -2692,17 +3071,48 @@
         }).join('');
       }
 
+      // AI credit/key problem banner — only surfaced here on the home dashboard
+      let bannerHtml = '';
+      const aiStatus = getAiStatus();
+      if ((aiStatus === 'no_credit' || aiStatus === 'bad_key') && localStorage.getItem(AI_BANNER_DISMISS_KEY) !== aiStatus) {
+        const bannerMsg = aiStatus === 'no_credit'
+          ? '<b>DeepSeek credits exhausted.</b> AI summaries and action items are paused — top up at platform.deepseek.com.'
+          : '<b>DeepSeek API key rejected.</b> Update it in AI settings to restore AI features.';
+        bannerHtml = `<div class="dash-ai-banner"><iconify-icon icon="solar:danger-triangle-linear" width="15" style="flex-shrink:0;margin-top:1px;"></iconify-icon><span>${bannerMsg}</span><button class="dash-ai-banner-dismiss" id="aiBannerDismiss" aria-label="Dismiss">✕</button></div>`;
+      }
+
+      // AI summary of the most recently active folder (needs an API key to show)
+      const aiFolderId = getAiKey() ? aiRecentFolderId() : null;
+      const aiSummaryHtml = aiFolderId ? `
+        <div class="dash-ai-section">
+          <div class="dash-section-title" style="display:flex;align-items:center;gap:6px;">AI Summary · ${escapeHTML(getFolderName(aiFolderId))}
+            <button class="dash-ai-refresh" id="aiSummaryRefresh" title="Refresh summary"><iconify-icon icon="solar:refresh-linear" width="13"></iconify-icon></button>
+          </div>
+          <div class="dash-ai-card" id="aiSummaryBox" data-folder-id="${aiFolderId}"></div>
+        </div>` : '';
+
       el.innerHTML = `
       <div class="dash-hero">
+        ${bannerHtml}
         <div class="dash-greeting">${getGreeting()}</div>
         <div class="dash-date">${getDateLabel()}</div>
         <div class="dash-chips">${chipsHtml}</div>
+        ${aiSummaryHtml}
         <div class="dash-pinned-section">
           <div class="dash-section-title">Pinned</div>
           <div class="dash-pinned-list">${pinnedHtml}</div>
         </div>
       </div>
     `;
+
+      const dismissBtn = document.getElementById('aiBannerDismiss');
+      if (dismissBtn) dismissBtn.addEventListener('click', () => {
+        localStorage.setItem(AI_BANNER_DISMISS_KEY, getAiStatus());
+        renderDashboard();
+      });
+      const refreshBtn = document.getElementById('aiSummaryRefresh');
+      if (refreshBtn) refreshBtn.addEventListener('click', () => renderAiSummarySection(true));
+      if (aiFolderId) renderAiSummarySection(false);
 
       el.querySelectorAll('.dash-chip[data-folder-id]').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -3973,6 +4383,44 @@
       }
     });
 
+    // ── AI settings & action-item listeners ──
+    function openAiSettings() {
+      document.getElementById('aiKeyInput').value = getAiKey();
+      document.getElementById('aiTestResult').textContent = '';
+      toggleModal('aiModal', true);
+    }
+    document.getElementById('menuAiBtn').addEventListener('click', openAiSettings);
+    document.getElementById('closeAiBtn').addEventListener('click', () => toggleModal('aiModal', false));
+    document.getElementById('aiKeySave').addEventListener('click', () => {
+      const val = document.getElementById('aiKeyInput').value.trim();
+      if (val) localStorage.setItem(AI_KEY, val); else localStorage.removeItem(AI_KEY);
+      localStorage.removeItem(AI_STATUS_KEY);
+      localStorage.removeItem(AI_BANNER_DISMISS_KEY);
+      localStorage.removeItem(AI_SUMMARY_CACHE_KEY); // resummarize under the new key
+      toggleModal('aiModal', false);
+      showToast(val ? 'API key saved' : 'API key removed');
+      renderDashboard();
+      if (val) checkAiBalance();
+    });
+    document.getElementById('aiTestBtn').addEventListener('click', async () => {
+      const out = document.getElementById('aiTestResult');
+      const val = document.getElementById('aiKeyInput').value.trim();
+      if (!val) { out.textContent = 'Enter an API key first.'; return; }
+      out.textContent = 'Testing…';
+      try {
+        const res = await fetch('https://api.deepseek.com/user/balance', {
+          headers: { 'Authorization': 'Bearer ' + val }
+        });
+        if (res.status === 401) { out.textContent = '✕ Key rejected — check it on platform.deepseek.com'; return; }
+        if (!res.ok) { out.textContent = '✕ DeepSeek returned an error (' + res.status + ')'; return; }
+        const data = await res.json();
+        out.textContent = data.is_available ? '✓ Connected — credits available' : '✓ Key works, but no credits left';
+      } catch (err) {
+        out.textContent = '✕ Network error — are you online?';
+      }
+    });
+    document.getElementById('aiActionItemsBtn').addEventListener('click', extractActionItems);
+
     // ── Recycle Bin event listeners ──
     document.getElementById('menuBinBtn').addEventListener('click', () => {
       renderBinModal();
@@ -4036,6 +4484,7 @@
     // Init
     autoPurgeBin(); // Remove notes older than 15 days on startup
     updateBinBadge();
+    checkAiBalance(); // Surface exhausted DeepSeek credits on the dashboard early
     switchView('rapid'); // Default to rapid as requested toggle paradigm
 
     // Lift the bottom dock above the keyboard when it appears

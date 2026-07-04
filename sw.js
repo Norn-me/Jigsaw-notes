@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jigsaw-notes-v5';
+const CACHE_NAME = 'jigsaw-notes-v6';
 const ASSETS = [
   './',
   './jigsaw_notes_v3.html',
@@ -30,6 +30,9 @@ self.addEventListener('activate', e => {
 
 // Fetch — cache first, network fallback
 self.addEventListener('fetch', e => {
+  // Never cache DeepSeek API calls — a cache-first hit would pin a stale
+  // balance/chat response forever. Let them go straight to the network.
+  if (new URL(e.request.url).hostname === 'api.deepseek.com') return;
   e.respondWith(
     // Ignore the query string for navigations so share-target URLs
     // (?shared_text=...) hit the cached app shell offline.
