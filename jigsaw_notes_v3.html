@@ -1803,6 +1803,17 @@
       margin-bottom: var(--space-5);
     }
 
+    .dash-ai-folder-select {
+      background: var(--surface-card);
+      color: var(--color-foreground);
+      border: 1px solid var(--color-divider);
+      border-radius: var(--radius-small, 6px);
+      font-family: var(--font-sans);
+      font-size: var(--text-tiny);
+      padding: 2px 6px;
+      max-width: 140px;
+    }
+
     .dash-ai-refresh {
       background: none;
       border: none;
@@ -2186,6 +2197,7 @@
     const AI_STATUS_KEY = "jigsaw_ai_status"; // 'ok' | 'no_credit' | 'bad_key'
     const AI_BANNER_DISMISS_KEY = "jigsaw_ai_banner_dismissed";
     const AI_SUMMARY_CACHE_KEY = "jigsaw_ai_summaries";
+    const AI_SUMMARY_FOLDER_KEY = "jigsaw_ai_summary_folder";
 
     // Migrate dict from old {key:val} object to new [{id,key,val,folders}] array format
     function migrateDict(raw) {
@@ -2945,6 +2957,18 @@
       return recentFolders.find(id => id !== 'root' && folders.some(f => f.id === id)) || null;
     }
 
+    // Folder shown in the AI Summary card: user's explicit pick if still valid,
+    // otherwise fall back to the most recently active non-root folder.
+    function getAiSummaryFolderId() {
+      const picked = localStorage.getItem(AI_SUMMARY_FOLDER_KEY);
+      if (picked && picked !== 'root' && folders.some(f => f.id === picked)) return picked;
+      return aiRecentFolderId();
+    }
+
+    function setAiSummaryFolderId(folderId) {
+      localStorage.setItem(AI_SUMMARY_FOLDER_KEY, folderId);
+    }
+
     // Cheap change detector: a summary is reused until the folder's entry count
     // or newest timestamp moves, so re-renders don't burn tokens.
     function folderFingerprint(folderId) {
@@ -2964,7 +2988,9 @@
       const folderId = box.dataset.folderId;
       const fp = folderFingerprint(folderId);
       const hit = getSummaryCache()[folderId];
-      if (!force && hit && hit.fp === fp) { fillAiSummary(box, hit); return; }
+      // Once a summary exists it's shown as-is until the user presses Refresh —
+      // new/changed notes no longer trigger a silent re-fetch on their own.
+      if (!force && hit) { fillAiSummary(box, hit); return; }
       box.innerHTML = '<div class="dash-ai-skel-line" style="width:92%;"></div>'
         + '<div class="dash-ai-skel-line" style="width:70%;"></div>'
         + '<div class="dash-ai-skel-line" style="width:45%;"></div>';
@@ -3081,11 +3107,15 @@
         bannerHtml = `<div class="dash-ai-banner"><iconify-icon icon="solar:danger-triangle-linear" width="15" style="flex-shrink:0;margin-top:1px;"></iconify-icon><span>${bannerMsg}</span><button class="dash-ai-banner-dismiss" id="aiBannerDismiss" aria-label="Dismiss">✕</button></div>`;
       }
 
-      // AI summary of the most recently active folder (needs an API key to show)
-      const aiFolderId = getAiKey() ? aiRecentFolderId() : null;
+      // AI summary of a chosen folder (needs an API key to show)
+      const aiFolderId = getAiKey() ? getAiSummaryFolderId() : null;
+      const summaryFolderOptions = otherFolders.map(f =>
+        `<option value="${f.id}"${f.id === aiFolderId ? ' selected' : ''}>${escapeHTML(f.name)}</option>`
+      ).join('');
       const aiSummaryHtml = aiFolderId ? `
         <div class="dash-ai-section">
-          <div class="dash-section-title" style="display:flex;align-items:center;gap:6px;">AI Summary · ${escapeHTML(getFolderName(aiFolderId))}
+          <div class="dash-section-title" style="display:flex;align-items:center;gap:6px;">AI Summary ·
+            <select class="dash-ai-folder-select" id="aiSummaryFolderSelect">${summaryFolderOptions}</select>
             <button class="dash-ai-refresh" id="aiSummaryRefresh" title="Refresh summary"><iconify-icon icon="solar:refresh-linear" width="13"></iconify-icon></button>
           </div>
           <div class="dash-ai-card" id="aiSummaryBox" data-folder-id="${aiFolderId}"></div>
@@ -3112,6 +3142,11 @@
       });
       const refreshBtn = document.getElementById('aiSummaryRefresh');
       if (refreshBtn) refreshBtn.addEventListener('click', () => renderAiSummarySection(true));
+      const folderSelect = document.getElementById('aiSummaryFolderSelect');
+      if (folderSelect) folderSelect.addEventListener('change', () => {
+        setAiSummaryFolderId(folderSelect.value);
+        renderDashboard();
+      });
       if (aiFolderId) renderAiSummarySection(false);
 
       el.querySelectorAll('.dash-chip[data-folder-id]').forEach(chip => {
