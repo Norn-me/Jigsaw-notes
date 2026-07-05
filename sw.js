@@ -1,18 +1,37 @@
-const CACHE_NAME = 'jigsaw-notes-v6';
+const CACHE_NAME = 'jigsaw-notes-v7';
 const ASSETS = [
   './',
   './jigsaw_notes_v3.html',
   './manifest.json',
+  './JigsawNote%20Design%20System/styles.css',
+  './JigsawNote%20Design%20System/tokens/fonts.css',
+  './JigsawNote%20Design%20System/tokens/colors.css',
+  './JigsawNote%20Design%20System/tokens/typography.css',
+  './JigsawNote%20Design%20System/tokens/spacing.css',
+  './JigsawNote%20Design%20System/tokens/base.css',
   './icon-180.png',
   './icon-192.png',
   './icon-512.png'
+];
+
+// Cross-origin assets return opaque responses (status 0), which cache.addAll
+// rejects — fetch them no-cors and cache.put manually. Without these the app
+// loses every icon and webfont when opened offline.
+const CDN_ASSETS = [
+  'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Onest:wght@400;500;600;700&display=swap'
 ];
 
 // Install — cache app shell
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
+      .then(cache => cache.addAll(ASSETS)
+        .then(() => Promise.all(CDN_ASSETS.map(url =>
+          fetch(url, { mode: 'no-cors' })
+            .then(resp => cache.put(url, resp))
+            .catch(() => { /* CDN unreachable during install — runtime fetch will retry */ })
+        ))))
       .then(() => self.skipWaiting())
   );
 });

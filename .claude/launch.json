@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8934"],
       "port": 8934
+    },
+    {
+      "name": "jigsaw-notes-static-alt",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8941"],
+      "port": 8941
     }
   ]
 }

@@ -2,6 +2,7 @@
   "name": "Jigsaw Notes",
   "short_name": "Jigsaw",
   "description": "Fast shorthand note capture with auto-sorting",
+  "id": "./",
   "start_url": "./jigsaw_notes_v3.html",
   "scope": "./",
   "display": "standalone",

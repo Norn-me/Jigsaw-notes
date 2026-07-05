@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#161e17">
   <meta name="description" content="Fast shorthand note capture with auto-sorting categories and folders">
   <meta name="mobile-web-app-capable" content="yes">
@@ -15,7 +15,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
   <link rel="stylesheet" href="./JigsawNote%20Design%20System/styles.css">
-  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+  <script defer src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
   <title>Jigsaw Notes</title>
   <style>
     :root {
@@ -82,6 +82,7 @@
       display: flex;
       flex-direction: column;
       padding-bottom: 92px;
+      overscroll-behavior: contain;
     }
 
     .view.hidden {
@@ -98,6 +99,7 @@
       min-height: 0;
       overflow-y: auto;
       padding: var(--space-4) var(--space-4) 148px;
+      overscroll-behavior: contain;
     }
 
     .icon-btn {
@@ -128,8 +130,10 @@
       display: flex;
       align-items: center;
       gap: var(--space-1);
-      padding: 0 var(--space-3);
-      height: 56px;
+      /* Top safe-area: with viewport-fit=cover + black-translucent the page renders
+         under the iOS status bar / Android cutout, so the header must pad past it */
+      padding: env(safe-area-inset-top, 0px) var(--space-3) 0;
+      height: calc(56px + env(safe-area-inset-top, 0px));
       background: var(--surface-app);
       border-bottom: 1px solid var(--color-divider);
       flex-shrink: 0;
@@ -373,6 +377,7 @@
       z-index: 100;
       display: flex;
       flex-direction: column;
+      padding-top: env(safe-area-inset-top, 0px);
     }
 
     .sidebar.open {
@@ -520,6 +525,7 @@
       flex: 1;
       overflow-y: auto;
       padding: var(--space-2);
+      overscroll-behavior: contain;
     }
 
     .folder-item {
@@ -1068,6 +1074,7 @@
     .modal-body {
       overflow-y: auto;
       flex: 1;
+      overscroll-behavior: contain;
     }
 
     .modal-row {
@@ -1193,7 +1200,7 @@
 
     .toast {
       position: fixed;
-      top: 20px;
+      top: calc(20px + env(safe-area-inset-top, 0px));
       left: 50%;
       transform: translateX(-50%) translateY(-16px);
       background: var(--surface-raised);
@@ -1889,10 +1896,73 @@
     /* ── Swipe gestures on entry cards ── */
     .entry {
       touch-action: pan-y;
+      /* Long-press enters select mode — without this iOS starts a text
+         selection / callout on the card instead */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .entry.swipe-snap {
       transition: transform 0.18s ease-out;
+    }
+
+    /* ── Mobile / touch adjustments ── */
+    /* Pinch-zoom is allowed again (viewport no longer locks scale), but iOS
+       Safari zooms the whole page when focusing a field under 16px, so every
+       field is clamped to 16px minimum. !important outranks the per-component
+       sizes above (e.g. .search-bar input at --text-small). */
+    input,
+    select,
+    textarea {
+      font-size: max(var(--text-medium, 1rem), 1em) !important;
+    }
+
+    /* Suppress double-tap zoom on interactive elements (rapid taps on
+       checkboxes/buttons would otherwise zoom now that the page is zoomable) */
+    a,
+    button,
+    input,
+    select,
+    label,
+    .dash-chip,
+    .folder-item,
+    .list-item,
+    .dict-row,
+    .fa-row,
+    .recent-chip {
+      touch-action: manipulation;
+    }
+
+    @media (hover: none) {
+
+      /* Hover-revealed controls don't exist on touch — keep them visible */
+      .folder-item .f-del,
+      .folder-item .f-settings {
+        display: block;
+        padding: 8px;
+      }
+
+      .entry .del {
+        color: var(--text-muted);
+        width: 32px;
+        height: 32px;
+      }
+
+      /* 44px minimum touch targets */
+      .icon-btn {
+        width: 44px;
+        height: 44px;
+      }
+
+      .close-sidebar {
+        width: 40px;
+        height: 40px;
+      }
+
+      .dict-del-btn {
+        padding: 8px 10px;
+      }
     }
   </style>
 </head>
