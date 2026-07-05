@@ -1811,14 +1811,21 @@
     }
 
     .dash-ai-folder-select {
-      background: var(--surface-card);
-      color: var(--color-foreground);
-      border: 1px solid var(--color-divider);
-      border-radius: var(--radius-small, 6px);
+      background: transparent;
+      color: var(--text-subtle);
+      border: none;
       font-family: var(--font-sans);
       font-size: var(--text-tiny);
-      padding: 2px 6px;
-      max-width: 140px;
+      font-weight: var(--fw-semibold);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0;
+      max-width: 160px;
+      cursor: pointer;
+    }
+
+    .dash-ai-folder-select:hover {
+      color: var(--color-primary);
     }
 
     .dash-ai-refresh {
@@ -1833,13 +1840,6 @@
 
     .dash-ai-refresh:hover {
       color: var(--color-primary);
-    }
-
-    .dash-ai-card {
-      background: var(--surface-card);
-      border: 1px solid var(--color-divider);
-      border-radius: var(--radius-medium);
-      padding: var(--space-3);
     }
 
     .dash-ai-summary-text {
@@ -1978,7 +1978,7 @@
     </div>
     <div class="sidebar-actions">
       <button class="btn-sidebar" id="menuCatsBtn">Categories</button>
-      <button class="btn-sidebar" id="menuAiBtn">AI</button>
+      <button class="btn-sidebar" id="menuAiBtn">Settings</button>
       <button class="btn-sidebar" id="menuBinBtn" style="position:relative;">Bin<span class="bin-badge" id="binBadge"
           style="display:none;"></span></button>
     </div>
@@ -2125,7 +2125,7 @@
 
   <div class="modal" id="aiModal">
     <div class="modal-header">
-      <h2>AI settings</h2>
+      <h2>Settings</h2>
       <button class="close-sidebar" id="closeAiBtn">✕</button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:var(--space-3);">
@@ -2193,8 +2193,8 @@
           <button class="checklist-btn" id="checklistBtn" title="Toggle checklist">
             <iconify-icon icon="solar:checklist-minimalistic-linear" width="15"></iconify-icon>
           </button>
-          <button class="media-btn" id="aiActionItemsBtn" title="Extract action items (AI)">
-            <iconify-icon icon="solar:magic-stick-3-linear" width="16"></iconify-icon>
+          <button class="media-btn" id="aiActionItemsBtn" title="Extract action items">
+            <iconify-icon icon="solar:clipboard-check-linear" width="16"></iconify-icon>
           </button>
           <span class="editor-action-divider"></span>
           <button class="pin-btn" id="editorPinBtn" title="Pin note">
@@ -2910,11 +2910,11 @@
 
     function aiErrorText(err) {
       return {
-        no_key: 'Add your DeepSeek API key in AI settings first',
-        no_credit: 'DeepSeek credits exhausted — top up to keep using AI',
-        bad_key: 'DeepSeek API key was rejected — check AI settings',
-        network: "Couldn't reach DeepSeek — check your connection"
-      }[err.message] || 'AI request failed (' + err.message + ')';
+        no_key: 'Add your API key in Settings first',
+        no_credit: 'Out of credit — top up to keep this going',
+        bad_key: 'Your key was rejected — check Settings',
+        network: "Couldn't connect — check your connection"
+      }[err.message] || 'Request failed (' + err.message + ')';
     }
 
     async function checkAiBalance() {
@@ -3172,8 +3172,8 @@
       const aiStatus = getAiStatus();
       if ((aiStatus === 'no_credit' || aiStatus === 'bad_key') && localStorage.getItem(AI_BANNER_DISMISS_KEY) !== aiStatus) {
         const bannerMsg = aiStatus === 'no_credit'
-          ? '<b>DeepSeek credits exhausted.</b> AI summaries and action items are paused — top up at platform.deepseek.com.'
-          : '<b>DeepSeek API key rejected.</b> Update it in AI settings to restore AI features.';
+          ? '<b>Summaries are paused.</b> Your account needs a top-up — see Settings for details.'
+          : '<b>Summaries are paused.</b> Your key needs updating — check Settings.';
         bannerHtml = `<div class="dash-ai-banner"><iconify-icon icon="solar:danger-triangle-linear" width="15" style="flex-shrink:0;margin-top:1px;"></iconify-icon><span>${bannerMsg}</span><button class="dash-ai-banner-dismiss" id="aiBannerDismiss" aria-label="Dismiss">✕</button></div>`;
       }
 
@@ -3184,11 +3184,11 @@
       ).join('');
       const aiSummaryHtml = aiFolderId ? `
         <div class="dash-ai-section">
-          <div class="dash-section-title" style="display:flex;align-items:center;gap:6px;">AI Summary ·
+          <div class="dash-section-title" style="display:flex;align-items:center;gap:6px;">Overview ·
             <select class="dash-ai-folder-select" id="aiSummaryFolderSelect">${summaryFolderOptions}</select>
-            <button class="dash-ai-refresh" id="aiSummaryRefresh" title="Refresh summary"><iconify-icon icon="solar:refresh-linear" width="13"></iconify-icon></button>
+            <button class="dash-ai-refresh" id="aiSummaryRefresh" title="Refresh"><iconify-icon icon="solar:refresh-linear" width="13"></iconify-icon></button>
           </div>
-          <div class="dash-ai-card" id="aiSummaryBox" data-folder-id="${aiFolderId}"></div>
+          <div id="aiSummaryBox" data-folder-id="${aiFolderId}"></div>
         </div>` : '';
 
       el.innerHTML = `

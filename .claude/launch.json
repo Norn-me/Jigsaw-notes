@@ -12,6 +12,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8941"],
       "port": 8941
+    },
+    {
+      "name": "jigsaw-notes-static-2",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8957"],
+      "port": 8957
     }
   ]
 }
