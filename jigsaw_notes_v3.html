@@ -233,6 +233,8 @@
     }
 
     .entry {
+      position: relative;
+      z-index: 1;
       background: var(--surface-card);
       border: 1px solid var(--color-divider);
       border-radius: var(--radius-medium);
@@ -825,7 +827,7 @@
       background: var(--surface-app);
       border-top: 1px solid var(--color-divider);
       border-radius: var(--radius-large) var(--radius-large) 0 0;
-      box-shadow: 0px -16px 32px rgba(0, 0, 0, 0.4), 0px -4px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0px -16px 32px rgba(0, 0, 0, 0.2), 0px -4px 10px rgba(0, 0, 0, 0.2);
       padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
       z-index: 90;
       transition: bottom 0.1s ease-out;
@@ -1905,6 +1907,65 @@
 
     .entry.swipe-snap {
       transition: transform 0.18s ease-out;
+    }
+
+    /* Reveal layer behind the card, shown as it's dragged — colors pulled
+       from the same semantic tokens used elsewhere (primary = recategorize,
+       danger = delete), not one-off swipe-specific colors. */
+    .entry-row {
+      position: relative;
+      border-radius: var(--radius-medium);
+      overflow: hidden;
+    }
+
+    .entry-swipe-bg {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-medium);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-fast) var(--ease-out);
+    }
+
+    .entry-swipe-bg.entry-swipe-cat {
+      background: var(--color-primary);
+      color: var(--color-primary-foreground);
+    }
+
+    .entry-swipe-bg.entry-swipe-del {
+      background: var(--color-danger);
+      color: var(--color-danger-foreground);
+    }
+
+    .entry-swipe-bg iconify-icon,
+    .entry-swipe-bg .swipe-x {
+      position: absolute;
+      top: 50%;
+      font-size: 20px;
+      line-height: 1;
+      font-weight: var(--fw-semibold);
+      transform: translateY(-50%);
+      transition: left 0.18s var(--ease-out), right 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+    }
+
+    .entry-swipe-cat iconify-icon {
+      left: 22px;
+    }
+
+    .entry-swipe-del .swipe-x {
+      right: 22px;
+    }
+
+    /* Full-swipe commit: icon glides from the edge to dead-center as the
+       reveal takes over the whole row (matches the design reference). */
+    .entry-swipe-bg.committed.entry-swipe-cat iconify-icon {
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .entry-swipe-bg.committed.entry-swipe-del .swipe-x {
+      right: 50%;
+      transform: translate(50%, -50%);
     }
 
     /* ── Mobile / touch adjustments ── */
@@ -3321,6 +3382,15 @@
 
     // Shared entry card renderer (used by rapid view + search results)
     function renderEntryCard(e, parent, showFolder) {
+      const row = document.createElement("div");
+      row.className = "entry-row";
+      row.innerHTML = `
+        <div class="entry-swipe-bg entry-swipe-cat"><iconify-icon icon="solar:folder-linear" width="20"></iconify-icon></div>
+        <div class="entry-swipe-bg entry-swipe-del"><span class="swipe-x">✕</span></div>
+      `;
+      const catBg = row.querySelector('.entry-swipe-cat');
+      const delBg = row.querySelector('.entry-swipe-del');
+
       const div = document.createElement("div");
       div.className = `entry${selectedIds.has(e.id) ? ' selected' : ''}`;
       div.draggable = !selectMode;
@@ -3388,6 +3458,9 @@
         if (swipeActive) {
           swipeDX = dx;
           div.style.transform = 'translateX(' + dx * 0.6 + 'px)';
+          const progress = Math.min(1, Math.abs(dx) / 70);
+          if (dx > 0) { catBg.style.opacity = progress; delBg.style.opacity = 0; }
+          else { delBg.style.opacity = progress; catBg.style.opacity = 0; }
         }
       }, { passive: true });
       div.addEventListener('touchend', () => {
@@ -3395,22 +3468,40 @@
         if (!swipeActive) return;
         suppressClick = true;
         div.classList.add('swipe-snap');
-        div.style.transform = '';
         if (swipeDX > 70) {
+          // Recategorize: card snaps back (nothing is removed), reveal briefly commits then fades.
+          div.style.transform = '';
+          catBg.classList.add('committed');
+          setTimeout(() => { catBg.classList.remove('committed'); catBg.style.opacity = 0; }, 200);
           openEntryCatSheet(e.id);
         } else if (swipeDX < -70) {
-          const entry = entries.find(en => en.id === e.id);
-          if (entry) softDeleteEntry(entry);
-          entries = entries.filter(en => en.id !== e.id);
-          pinnedNotes = pinnedNotes.filter(id => id !== e.id);
-          recentNotes = recentNotes.filter(id => id !== e.id);
-          saveAll(); renderRapidView();
-          showToast('Moved to bin');
+          // Delete: card finishes sliding off-screen as the reveal takes over the row.
+          delBg.classList.add('committed');
+          delBg.style.opacity = 1;
+          div.style.transform = 'translateX(-120%)';
+          setTimeout(() => {
+            const entry = entries.find(en => en.id === e.id);
+            if (entry) softDeleteEntry(entry);
+            entries = entries.filter(en => en.id !== e.id);
+            pinnedNotes = pinnedNotes.filter(id => id !== e.id);
+            recentNotes = recentNotes.filter(id => id !== e.id);
+            saveAll(); renderRapidView();
+            showToast('Moved to bin');
+          }, 190);
+        } else {
+          div.style.transform = '';
+          catBg.style.opacity = 0;
+          delBg.style.opacity = 0;
         }
       });
       div.addEventListener('touchcancel', () => {
         clearTimeout(longPressTimer);
-        if (swipeActive) { div.classList.add('swipe-snap'); div.style.transform = ''; }
+        if (swipeActive) {
+          div.classList.add('swipe-snap');
+          div.style.transform = '';
+          catBg.classList.remove('committed'); delBg.classList.remove('committed');
+          catBg.style.opacity = 0; delBg.style.opacity = 0;
+        }
       });
 
       div.querySelector(".del").addEventListener("click", (ev) => {
@@ -3425,7 +3516,8 @@
           showToast('Moved to bin');
         }
       });
-      parent.appendChild(div);
+      row.appendChild(div);
+      parent.appendChild(row);
 
       if (e.imageId) {
         getBlob('images', e.imageId).then(blob => {
